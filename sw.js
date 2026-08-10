@@ -1,5 +1,6 @@
-const CACHE_NAME = 'aura-fit-v2';
+const CACHE_NAME = 'aura-fit-v3';
 const ASSETS = [
+  './',
   './index.html',
   './styles.css',
   './app.js',
@@ -12,13 +13,12 @@ const ASSETS = [
   './assets/clothes/dress_cocktail.png',
   './assets/clothes/dress_jumpsuit.png',
   './assets/icons/icon-192.png',
-  './assets/icons/icon-512.png',
-  './assets/screenshots/screenshot-desktop.png',
-  './assets/screenshots/screenshot-mobile.png'
+  './assets/icons/icon-512.png'
 ];
 
 // Install Service Worker
 self.addEventListener('install', (e) => {
+  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('Caching app assets...');
@@ -38,15 +38,25 @@ self.addEventListener('activate', (e) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// Fetch Intercept
+// Network-First Fetch Intercept: Always try network first to get latest updates, fallback to cache offline
 self.addEventListener('fetch', (e) => {
   e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      return cachedResponse || fetch(e.request);
-    })
+    fetch(e.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && e.request.method === 'GET') {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(e.request);
+      })
   );
 });
