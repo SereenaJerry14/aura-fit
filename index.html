@@ -26,338 +26,309 @@
   </script>
 </head>
 <body>
-  <!-- Device Shell Controls: Laptop / Mobile Toggle -->
-  <div class="emulator-controls">
-    <div class="emulator-info">
-      <span class="pulse-indicator"></span>
-      <strong>AURA PREVIEW ENGINE</strong>
-    </div>
-    <div class="emulator-buttons">
-      <button id="btn-view-laptop" class="active-mode">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-        Laptop Mode
-      </button>
-      <button id="btn-view-mobile">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-        Mobile Mode
-      </button>
-    </div>
-  </div>
-
-  <!-- Main Viewport Wrapper -->
-  <div id="emulator-shell" class="laptop-shell">
-    <div class="device-frame">
-      <div class="mobile-notch"></div>
-      <div class="mobile-status-bar">
-        <span class="time">9:41 AM</span>
-        <div class="icons">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.22 19.58 10.57 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
-        </div>
+  
+  <!-- Main Application Container -->
+  <div class="app-container">
+    
+    <!-- Luxury Fashion Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-subtitle">THE VIRTUAL FITTING EXPERIENCE</span>
+        <h1 class="brand-title">A U R A</h1>
       </div>
-      
-      <!-- Main Application Container -->
-      <div class="app-container">
-        
-        <!-- Luxury Fashion Header -->
-        <header class="app-header">
-          <div class="brand">
-            <span class="brand-subtitle">THE VIRTUAL FITTING EXPERIENCE</span>
-            <h1 class="brand-title">A U R A</h1>
-          </div>
-          <nav class="app-nav">
-            <button id="btn-nav-shop" class="nav-link active">SHOP THE COLLECTION</button>
-            <button id="btn-nav-stylist" class="nav-link">AI OCCASION STYLIST</button>
-          </nav>
-          <div class="header-actions">
-            <button class="icon-btn" id="btn-toggle-cart">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-              <span class="badge" id="cart-badge">0</span>
-            </button>
-          </div>
-        </header>
+      <nav class="app-nav">
+        <button id="btn-nav-shop" class="nav-link active">SHOP THE COLLECTION</button>
+        <button id="btn-nav-stylist" class="nav-link">AI OCCASION STYLIST</button>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="btn-toggle-cart">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          <span class="badge" id="cart-badge">0</span>
+        </button>
+      </div>
+    </header>
 
-        <!-- Main Body Wrapper -->
-        <main class="app-main">
-          
-          <!-- LEFT SIDE: Catalog & Shop -->
-          <section id="panel-shop" class="panel-left active">
-            <div class="section-header">
-              <h2>Browse Catalog</h2>
-              <p class="subtitle">Select a piece to try on virtually</p>
+    <!-- Main Body Wrapper -->
+    <main class="app-main">
+      
+      <!-- SIBLING 1: Catalog & Shop Panel -->
+      <section id="panel-shop" class="app-panel active">
+        <div class="section-header">
+          <h2>Browse Catalog</h2>
+          <p class="subtitle">Select a piece to try on virtually</p>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filter-bar">
+          <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search collection...">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+          <div class="category-tabs">
+            <button class="tab-btn active" data-category="all">All</button>
+            <button class="tab-btn" data-category="dress">Dresses</button>
+            <button class="tab-btn" data-category="suit">Suits & Sets</button>
+            <button class="tab-btn" data-category="jumpsuit">Jumpsuits</button>
+          </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="product-grid" id="product-grid">
+          <!-- Dynamically populated in app.js -->
+        </div>
+      </section>
+
+      <!-- SIBLING 2: The Virtual Fitting Room Workspace Panel -->
+      <section id="panel-fitroom" class="app-panel active">
+        <div class="fitting-room-container">
+          <div class="fitting-header">
+            <div class="fitting-title">
+              <h3>Virtual Fitting Room</h3>
+              <div class="status-indicator">
+                <span class="active-dot"></span>
+                <span id="fitting-status-text">Select a model to begin</span>
+              </div>
             </div>
             
-            <!-- Filters -->
-            <div class="filter-bar">
-              <div class="search-box">
-                <input type="text" id="search-input" placeholder="Search collection...">
-                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              </div>
-              <div class="category-tabs">
-                <button class="tab-btn active" data-category="all">All</button>
-                <button class="tab-btn" data-category="dress">Dresses</button>
-                <button class="tab-btn" data-category="suit">Suits & Sets</button>
-                <button class="tab-btn" data-category="jumpsuit">Jumpsuits</button>
+            <div class="fitting-actions">
+              <button id="btn-reset-fit" class="action-btn-sm" title="Reset Fit Position">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Main Interactive Canvas -->
+          <div class="canvas-workspace">
+            <div id="canvas-loader" class="loader-overlay hidden">
+              <div class="spinner"></div>
+              <p>Processing virtual try-on...</p>
+            </div>
+
+            <div class="canvas-container">
+              <canvas id="fitting-canvas" width="600" height="750"></canvas>
+              <div class="canvas-watermark">AURA FIT™</div>
+              
+              <!-- Quick Tooltip -->
+              <div class="workspace-tip" id="workspace-tip">
+                <span>💡 Drag or resize dress on canvas to adjust the fit.</span>
               </div>
             </div>
 
-            <!-- Product Grid -->
-            <div class="product-grid" id="product-grid">
-              <!-- Dynamically populated in app.js -->
+            <!-- Floating Control Buttons -->
+            <div class="canvas-quick-actions">
+              <button id="btn-zoom-in" class="floating-btn" title="Zoom In">➕</button>
+              <button id="btn-zoom-out" class="floating-btn" title="Zoom Out">➖</button>
+              <button id="btn-rotate-l" class="floating-btn" title="Rotate Left">↩️</button>
+              <button id="btn-rotate-r" class="floating-btn" title="Rotate Right">↪️</button>
             </div>
-          </section>
+          </div>
 
-          <!-- RIGHT SIDE: The Virtual Fitting Room Workspace -->
-          <section class="panel-right">
-            <div class="fitting-room-container">
-              <div class="fitting-header">
-                <div class="fitting-title">
-                  <h3>Virtual Fitting Room</h3>
-                  <div class="status-indicator">
-                    <span class="active-dot"></span>
-                    <span id="fitting-status-text">Select a model to begin</span>
-                  </div>
-                </div>
-                
-                <!-- Fitting room helper options -->
-                <div class="fitting-actions">
-                  <button id="btn-reset-fit" class="action-btn-sm" title="Reset Fit Position">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                    Reset
-                  </button>
-                </div>
-              </div>
-
-              <!-- Main Interactive Canvas -->
-              <div class="canvas-workspace">
-                <div id="canvas-loader" class="loader-overlay hidden">
-                  <div class="spinner"></div>
-                  <p>Processing virtual try-on...</p>
-                </div>
-
-                <div class="canvas-container">
-                  <canvas id="fitting-canvas" width="600" height="750"></canvas>
-                  
-                  <!-- Watermark overlay -->
-                  <div class="canvas-watermark">AURA FIT™</div>
-
-                  <!-- Quick Tooltip for drag adjustment -->
-                  <div class="workspace-tip" id="workspace-tip">
-                    <span>💡 Drag or resize dress on canvas to adjust the fit.</span>
-                  </div>
-                </div>
-
-                <!-- Floating Canvas Control Buttons -->
-                <div class="canvas-quick-actions">
-                  <button id="btn-zoom-in" class="floating-btn" title="Zoom In Outfit">➕</button>
-                  <button id="btn-zoom-out" class="floating-btn" title="Zoom Out Outfit">➖</button>
-                  <button id="btn-rotate-l" class="floating-btn" title="Rotate Left">↩️</button>
-                  <button id="btn-rotate-r" class="floating-btn" title="Rotate Right">↪️</button>
-                </div>
-              </div>
-
-              <!-- Model / Upload Selector Toolbar -->
-              <div class="fitting-controls-tabs">
-                <div class="tab-selectors">
-                  <button class="selector-tab active" data-tab="models">Standard Models</button>
-                  <button class="selector-tab" data-tab="upload">Try It On Yourself</button>
-                </div>
-
-                <!-- Model Choices Panel -->
-                <div class="control-panel-content active" id="panel-models">
-                  <div class="model-selection-grid">
-                    <div class="model-card active" data-model="female">
-                      <div class="model-avatar-container">
-                        <img src="assets/models/model_female.png" alt="Female Model Avatar" class="model-avatar">
-                      </div>
-                      <div class="model-details">
-                        <span class="model-name">Emily</span>
-                        <span class="model-type">Classic Fit</span>
-                      </div>
-                    </div>
-                    <div class="model-card" data-model="male">
-                      <div class="model-avatar-container">
-                        <img src="assets/models/model_male.png" alt="Male Model Avatar" class="model-avatar">
-                      </div>
-                      <div class="model-details">
-                        <span class="model-name">Marcus</span>
-                        <span class="model-type">Athletic Fit</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Upload Panel -->
-                <div class="control-panel-content" id="panel-upload">
-                  <div class="upload-zone" id="upload-zone">
-                    <input type="file" id="photo-upload-input" accept="image/*" class="hidden">
-                    <input type="file" id="photo-capture-input" accept="image/*" capture="user" class="hidden">
-                    <div class="upload-content">
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                      <p class="upload-title">Try it on yourself</p>
-                      <div class="upload-buttons-row" style="display: flex; gap: 12px; margin: 12px 0; justify-content: center; width: 100%;">
-                        <button type="button" id="btn-trigger-gallery" class="action-btn-outline" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-glass); padding: 8px 16px; border-radius: 20px; font-size: 11px; cursor: pointer;">📁 Photo Gallery</button>
-                        <button type="button" id="btn-trigger-camera" class="action-btn-outline" style="background: var(--color-accent-light); color: var(--color-accent); border: 1px solid var(--color-accent); padding: 8px 16px; border-radius: 20px; font-size: 11px; cursor: pointer;">📸 Open Camera</button>
-                      </div>
-                      <span class="upload-tip">Or drag & drop your image file here. Wear form-fitting clothes for best results.</span>
-                    </div>
-                  </div>
-                  <div class="upload-actions hidden" id="upload-status-panel">
-                    <div class="uploaded-file-info">
-                      <span class="file-icon">👤</span>
-                      <span id="uploaded-file-name" class="file-name">my_photo.jpg</span>
-                    </div>
-                    <div class="actions">
-                      <button id="btn-use-cam" class="action-btn-outline">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2 2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                        Retake
-                      </button>
-                      <button id="btn-clear-upload" class="action-btn-danger">Remove</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Manual Calibration Sliders (Shows if custom photo uploaded or manual fit enabled) -->
-              <div class="fit-adjustments-panel collapse" id="manual-adjust-panel">
-                <div class="panel-subtitle">Manual Alignment Controls</div>
-                <div class="control-group">
-                  <div class="control-label">
-                    <span>Position Vertical</span>
-                    <span id="val-pos-y">0px</span>
-                  </div>
-                  <input type="range" id="slider-pos-y" min="-300" max="300" value="0" class="fitting-slider">
-                </div>
-                <div class="control-group">
-                  <div class="control-label">
-                    <span>Position Horizontal</span>
-                    <span id="val-pos-x">0px</span>
-                  </div>
-                  <input type="range" id="slider-pos-x" min="-300" max="300" value="0" class="fitting-slider">
-                </div>
-                <div class="control-group">
-                  <div class="control-label">
-                    <span>Garment Size</span>
-                    <span id="val-scale">100%</span>
-                  </div>
-                  <input type="range" id="slider-scale" min="20" max="250" value="100" class="fitting-slider">
-                </div>
-                <div class="control-group">
-                  <div class="control-label">
-                    <span>Rotation</span>
-                    <span id="val-rotate">0°</span>
-                  </div>
-                  <input type="range" id="slider-rotate" min="-90" max="90" value="0" class="fitting-slider">
-                </div>
-                <div class="control-group">
-                  <div class="control-label">
-                    <span>Garment Opacity</span>
-                    <span id="val-opacity">100%</span>
-                  </div>
-                  <input type="range" id="slider-opacity" min="10" max="100" value="100" class="fitting-slider">
-                </div>
-              </div>
-
+          <!-- Model / Upload Selector Toolbar -->
+          <div class="fitting-controls-tabs">
+            <div class="tab-selectors">
+              <button class="selector-tab active" data-tab="models">Standard Models</button>
+              <button class="selector-tab" data-tab="upload">Try It On Yourself</button>
             </div>
-          </section>
 
-          <!-- SIDEBAR CHAT DRAWER: AI Occasion Stylist -->
-          <section id="panel-stylist" class="panel-left">
-            <div class="stylist-container">
-              <div class="section-header">
-                <h2>AI Occasion Stylist</h2>
-                <p class="subtitle">Get styling recommendations for your special event</p>
-              </div>
-
-              <!-- Stylist Selection Row -->
-              <div class="stylist-input-group">
-                <label for="occasion-select">What is the event/occasion?</label>
-                <div class="select-wrapper">
-                  <select id="occasion-select" class="stylist-select">
-                    <option value="" disabled selected>Choose an occasion...</option>
-                    <option value="wedding">Wedding Guest (Semi-Formal / Festive)</option>
-                    <option value="gala">Corporate Gala or Black Tie Charity Event</option>
-                    <option value="beach">Beach Vacation or Tropical Party</option>
-                    <option value="date">Romantic Date Night</option>
-                    <option value="brunch">Sunday Brunch / Smart Casual Gathering</option>
-                    <option value="party">Clubbing or Cocktail Evening Party</option>
-                    <option value="office">Corporate Meeting / Professional Presentation</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Recommendations Dashboard -->
-              <div class="recommendations-box empty" id="stylist-results">
-                <!-- Initial State -->
-                <div class="stylist-empty-state">
-                  <div class="stylist-icon">✨</div>
-                  <h4>Styling Intelligence</h4>
-                  <p>Choose an item from the shop, select your upcoming event, and the AI Stylist will generate tailored recommendations on layering, shoes, accessories, and venue etiquette rules.</p>
-                </div>
-
-                <!-- Populated State (hidden initially) -->
-                <div class="stylist-report hidden" id="report-container">
-                  <div class="report-header">
-                    <div class="badge-suitability" id="report-badge">Perfect Match</div>
-                    <h3 id="report-title">Formal Styling Advice</h3>
+            <!-- Model Choices Panel -->
+            <div class="control-panel-content active" id="panel-models">
+              <div class="model-selection-grid">
+                <div class="model-card active" data-model="female">
+                  <div class="model-avatar-container">
+                    <img src="assets/models/model_female.png" alt="Female Model Avatar" class="model-avatar">
                   </div>
-
-                  <div class="report-card score-card">
-                    <div class="score-circle">
-                      <span id="report-score" class="score-value">95%</span>
-                      <span class="score-label">Styling Score</span>
-                    </div>
-                    <div class="score-comment">
-                      <strong id="report-verdict">Sensational Choice!</strong>
-                      <p id="report-summary">This piece fits the event's dress code expectations flawlessly. Here is how to complete the look.</p>
-                    </div>
-                  </div>
-
-                  <!-- Carousel of styling advice cards -->
-                  <div class="styling-tips-grid">
-                    <div class="tip-section">
-                      <h4 class="tip-section-title">👔 Layering & Outerwear</h4>
-                      <p id="tip-layering">Tailored blazer or a structured trench coat is recommended.</p>
-                    </div>
-                    <div class="tip-section">
-                      <h4 class="tip-section-title">👠 Footwear Selection</h4>
-                      <p id="tip-footwear">Sleek leather pumps or minimal stiletto sandals.</p>
-                    </div>
-                    <div class="tip-section">
-                      <h4 class="tip-section-title">💎 Accessories & Jewelry</h4>
-                      <p id="tip-accessories">Gold-tone drop earrings and a modern structured clutch bag.</p>
-                    </div>
-                    <div class="tip-section">
-                      <h4 class="tip-section-title">💡 Dress Code Rules & Etiquette</h4>
-                      <p id="tip-rules">Avoid overly casual elements. Keep accessories matching and subtle.</p>
-                    </div>
-                  </div>
-
-                  <div class="interactive-chat-prompt">
-                    <p class="prompt-text">Want to ask our stylist direct questions? Ask below:</p>
-                    <div class="chat-input-box">
-                      <input type="text" id="chat-input" placeholder="Can I wear sneakers with this?">
-                      <button id="btn-chat-send">Send</button>
-                    </div>
-                    <div class="chat-response-area hidden" id="chat-response">
-                      <div class="stylist-bubble">
-                        <span class="name">AURA STYLIST:</span>
-                        <p id="chat-response-text"></p>
-                      </div>
-                    </div>
+                  <div class="model-details">
+                    <span class="model-name">Emily</span>
+                    <span class="model-type">Classic Fit</span>
                   </div>
                 </div>
-
+                <div class="model-card" data-model="male">
+                  <div class="model-avatar-container">
+                    <img src="assets/models/model_male.png" alt="Male Model Avatar" class="model-avatar">
+                  </div>
+                  <div class="model-details">
+                    <span class="model-name">Marcus</span>
+                    <span class="model-type">Athletic Fit</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </section>
 
-        </main>
-      </div>
+            <!-- Upload Panel -->
+            <div class="control-panel-content" id="panel-upload">
+              <div class="upload-zone" id="upload-zone">
+                <input type="file" id="photo-upload-input" accept="image/*" class="hidden">
+                <div class="upload-content">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                  <p class="upload-title">Camera & Gallery Upload</p>
+                  <button type="button" class="upload-trigger-btn">📷 Select or Take Photo</button>
+                  <span class="upload-tip">Wear form-fitting clothes and face forward.</span>
+                </div>
+              </div>
+              <div class="upload-actions hidden" id="upload-status-panel">
+                <div class="uploaded-file-info">
+                  <span class="file-icon">👤</span>
+                  <span id="uploaded-file-name" class="file-name">my_photo.jpg</span>
+                </div>
+                <div class="actions">
+                  <button id="btn-clear-upload" class="action-btn-danger">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <!-- Device Home Indicator for Mobile Emulator Shell -->
-      <div class="mobile-home-indicator"></div>
-    </div>
+          <!-- Manual Calibration Sliders -->
+          <div class="fit-adjustments-panel collapse" id="manual-adjust-panel">
+            <div class="panel-subtitle">Manual Alignment Controls</div>
+            <div class="control-group">
+              <div class="control-label">
+                <span>Position Vertical</span>
+                <span id="val-pos-y">0px</span>
+              </div>
+              <input type="range" id="slider-pos-y" min="-300" max="300" value="0" class="fitting-slider">
+            </div>
+            <div class="control-group">
+              <div class="control-label">
+                <span>Position Horizontal</span>
+                <span id="val-pos-x">0px</span>
+              </div>
+              <input type="range" id="slider-pos-x" min="-300" max="300" value="0" class="fitting-slider">
+            </div>
+            <div class="control-group">
+              <div class="control-label">
+                <span>Garment Size</span>
+                <span id="val-scale">100%</span>
+              </div>
+              <input type="range" id="slider-scale" min="20" max="250" value="100" class="fitting-slider">
+            </div>
+            <div class="control-group">
+              <div class="control-label">
+                <span>Rotation</span>
+                <span id="val-rotate">0°</span>
+              </div>
+              <input type="range" id="slider-rotate" min="-90" max="90" value="0" class="fitting-slider">
+            </div>
+            <div class="control-group">
+              <div class="control-label">
+                <span>Garment Opacity</span>
+                <span id="val-opacity">100%</span>
+              </div>
+              <input type="range" id="slider-opacity" min="10" max="100" value="100" class="fitting-slider">
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SIBLING 3: AI Occasion Stylist Panel -->
+      <section id="panel-stylist" class="app-panel">
+        <div class="stylist-container">
+          <div class="section-header">
+            <h2>AI Occasion Stylist</h2>
+            <p class="subtitle">Get styling recommendations for your special event</p>
+          </div>
+
+          <!-- Stylist Selection Row -->
+          <div class="stylist-input-group">
+            <label for="occasion-select">What is the event/occasion?</label>
+            <div class="select-wrapper">
+              <select id="occasion-select" class="stylist-select">
+                <option value="" disabled selected>Choose an occasion...</option>
+                <option value="wedding">Wedding Guest (Semi-Formal / Festive)</option>
+                <option value="gala">Corporate Gala or Black Tie Charity Event</option>
+                <option value="beach">Beach Vacation or Tropical Party</option>
+                <option value="date">Romantic Date Night</option>
+                <option value="brunch">Sunday Brunch / Smart Casual Gathering</option>
+                <option value="party">Clubbing or Cocktail Evening Party</option>
+                <option value="office">Corporate Meeting / Professional Presentation</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Recommendations Dashboard -->
+          <div class="recommendations-box empty" id="stylist-results">
+            <div class="stylist-empty-state">
+              <div class="stylist-icon">✨</div>
+              <h4>Styling Intelligence</h4>
+              <p>Choose an item from the shop, select your upcoming event, and the AI Stylist will generate tailored recommendations on layering, shoes, accessories, and venue etiquette rules.</p>
+            </div>
+
+            <!-- Populated State -->
+            <div class="stylist-report hidden" id="report-container">
+              <div class="report-header">
+                <div class="badge-suitability" id="report-badge">Perfect Match</div>
+                <h3 id="report-title">Formal Styling Advice</h3>
+              </div>
+
+              <div class="report-card score-card">
+                <div class="score-circle">
+                  <span id="report-score" class="score-value">95%</span>
+                  <span class="score-label">Styling Score</span>
+                </div>
+                <div class="score-comment">
+                  <strong id="report-verdict">Sensational Choice!</strong>
+                  <p id="report-summary">This piece fits the event's dress code expectations flawlessly. Here is how to complete the look.</p>
+                </div>
+              </div>
+
+              <!-- Recommendations cards -->
+              <div class="styling-tips-grid">
+                <div class="tip-section">
+                  <h4 class="tip-section-title">👔 Layering & Outerwear</h4>
+                  <p id="tip-layering">Tailored blazer or a structured trench coat is recommended.</p>
+                </div>
+                <div class="tip-section">
+                  <h4 class="tip-section-title">👠 Footwear Selection</h4>
+                  <p id="tip-footwear">Sleek leather pumps or minimal stiletto sandals.</p>
+                </div>
+                <div class="tip-section">
+                  <h4 class="tip-section-title">💎 Accessories & Jewelry</h4>
+                  <p id="tip-accessories">Gold-tone drop earrings and a modern structured clutch bag.</p>
+                </div>
+                <div class="tip-section">
+                  <h4 class="tip-section-title">💡 Dress Code Rules & Etiquette</h4>
+                  <p id="tip-rules">Avoid overly casual elements. Keep accessories matching and subtle.</p>
+                </div>
+              </div>
+
+              <div class="interactive-chat-prompt">
+                <p class="prompt-text">Want to ask our stylist direct questions? Ask below:</p>
+                <div class="chat-input-box">
+                  <input type="text" id="chat-input" placeholder="Can I wear sneakers with this?">
+                  <button id="btn-chat-send">Send</button>
+                </div>
+                <div class="chat-response-area hidden" id="chat-response">
+                  <div class="stylist-bubble">
+                    <span class="name">AURA STYLIST:</span>
+                    <p id="chat-response-text"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION TAB BAR (Shows on mobile only) -->
+    <nav class="mobile-tab-nav">
+      <button class="mobile-tab-btn active" data-target="shop">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Catalog</span>
+      </button>
+      <button class="mobile-tab-btn" data-target="fitroom">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        <span>Fit Room</span>
+      </button>
+      <button class="mobile-tab-btn" data-target="stylist">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span>AI Stylist</span>
+      </button>
+    </nav>
+
   </div>
 
   <!-- Shopping Bag Modal -->
@@ -368,7 +339,6 @@
         <button class="close-btn" id="btn-close-cart">&times;</button>
       </div>
       <div class="cart-items" id="cart-items-container">
-        <!-- populated dynamically -->
         <p class="empty-cart">No items in your rack. Try on clothing in the fitting room to add them here.</p>
       </div>
       <div class="cart-summary hidden" id="cart-summary-section">

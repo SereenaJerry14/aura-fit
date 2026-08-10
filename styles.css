@@ -30,16 +30,14 @@
 }
 
 body {
-  background-color: #050506;
+  background-color: var(--bg-main);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.6;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
 }
 
 /* Custom Scrollbar */
@@ -58,183 +56,14 @@ body {
   background: var(--color-accent);
 }
 
-/* EMULATOR FRAMEWORK */
-.emulator-controls {
-  width: 100%;
-  max-width: 1400px;
-  height: 50px;
-  background-color: #0b0b0e;
-  border-bottom: 1px solid #1c1c24;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-  z-index: 100;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-}
-
-.emulator-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  color: var(--text-secondary);
-}
-
-.pulse-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--color-accent);
-  box-shadow: 0 0 8px var(--color-accent);
-  animation: pulse-glow 2s infinite;
-}
-
-@keyframes pulse-glow {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(197, 168, 128, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(197, 168, 128, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(197, 168, 128, 0); }
-}
-
-.emulator-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.emulator-buttons button {
-  background: #181822;
-  border: 1px solid #282834;
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-  transition: var(--transition-smooth);
-}
-
-.emulator-buttons button:hover {
-  background: #20202c;
-  color: var(--text-primary);
-}
-
-.emulator-buttons button.active-mode {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: #000000;
-}
-
-/* Emulator Shell Transitions */
-#emulator-shell {
-  transition: width 0.5s cubic-bezier(0.19, 1, 0.22, 1), 
-              height 0.5s cubic-bezier(0.19, 1, 0.22, 1),
-              margin 0.5s cubic-bezier(0.19, 1, 0.22, 1),
-              border-radius 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-  overflow: hidden;
-  position: relative;
-}
-
-/* Laptop Layout Details */
-.laptop-shell {
-  width: 100%;
-  max-width: 1400px;
-  height: calc(100vh - 50px);
-  background: var(--bg-main);
-  box-shadow: none;
-}
-
-.laptop-shell .device-frame {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.laptop-shell .mobile-notch,
-.laptop-shell .mobile-status-bar,
-.laptop-shell .mobile-home-indicator {
-  display: none;
-}
-
-/* Mobile Frame Mockup Details */
-.mobile-shell {
-  width: 390px;
-  height: 844px;
-  margin: 30px auto;
-  background: var(--bg-main);
-  border: 10px solid #202025;
-  border-radius: 40px;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.8);
-}
-
-.mobile-shell .device-frame {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.mobile-shell .mobile-notch {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 110px;
-  height: 25px;
-  background: #202025;
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px;
-  z-index: 1010;
-}
-
-.mobile-shell .mobile-status-bar {
-  height: 44px;
-  padding: 0 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  z-index: 1000;
-  padding-bottom: 6px;
-  background-color: var(--bg-main);
-}
-
-.mobile-shell .mobile-status-bar .icons {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.mobile-shell .mobile-home-indicator {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 4px;
-  background: #40404a;
-  border-radius: 2px;
-  z-index: 1000;
-}
-
-.mobile-shell .app-container {
-  height: calc(100% - 44px - 20px); /* subtract status bar & home area */
-}
-
-/* APP LAYOUT */
+/* APP CONTAINERS */
 .app-container {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-main);
+  overflow: hidden;
 }
 
 /* Luxury Header */
@@ -273,42 +102,7 @@ body {
 }
 
 .app-nav {
-  display: flex;
-  gap: 24px;
-  height: 100%;
-}
-
-.nav-link {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  font-weight: 600;
-  height: 100%;
-  padding: 0 4px;
-  cursor: pointer;
-  position: relative;
-  transition: var(--transition-smooth);
-}
-
-.nav-link:hover {
-  color: var(--text-primary);
-}
-
-.nav-link.active {
-  color: var(--color-accent);
-}
-
-.nav-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: var(--color-accent);
+  display: none; /* Hide header navigation, we use mobile tabs and side-by-side desktop */
 }
 
 .header-actions {
@@ -348,38 +142,25 @@ body {
   align-items: center;
 }
 
-/* Main Split Screen */
+/* Main Content Area */
 .app-main {
   display: flex;
   flex: 1;
   overflow: hidden;
-}
-
-/* PANELS CONFIG */
-.panel-left {
-  width: 420px;
-  border-right: 1px solid var(--border-glass);
-  background-color: var(--bg-surface);
-  display: flex;
-  flex-direction: column;
-  display: none; /* Hide panels by default, show via .active */
-  overflow-y: auto;
-  flex-shrink: 0;
-}
-
-.panel-left.active {
-  display: flex;
-}
-
-.panel-right {
-  flex: 1;
-  background-color: var(--bg-main);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
-  overflow-y: auto;
   position: relative;
+}
+
+/* APP PANEL DEFAULT */
+.app-panel {
+  display: none; /* Toggled by JS on mobile, always active on desktop */
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  background-color: var(--bg-surface);
+}
+
+.app-panel.active {
+  display: flex;
 }
 
 .section-header {
@@ -576,10 +357,21 @@ body {
   border-radius: 3px;
 }
 
-/* FITTING WORKSPACE */
+/* FITTING ROOM CONTAINER */
+#panel-fitroom {
+  background-color: var(--bg-main);
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .fitting-room-container {
   width: 100%;
   max-width: 580px;
+  height: 100%;
+  max-height: 780px;
   background: var(--bg-surface);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-lg);
@@ -591,11 +383,12 @@ body {
 }
 
 .fitting-header {
-  padding: 18px 24px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border-glass);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .fitting-title {
@@ -649,21 +442,21 @@ body {
 /* Canvas Area */
 .canvas-workspace {
   position: relative;
-  width: 100%;
+  flex: 1;
   background: #09090b;
   display: flex;
   justify-content: center;
   align-items: center;
   border-bottom: 1px solid var(--border-glass);
+  min-height: 250px;
+  overflow: hidden;
 }
 
 .canvas-container {
   position: relative;
-  width: 100%;
-  max-width: 440px;
+  height: 90%;
   aspect-ratio: 4/5;
   overflow: hidden;
-  margin: 16px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.05);
   background-color: #111115;
@@ -677,10 +470,10 @@ body {
 
 .canvas-watermark {
   position: absolute;
-  bottom: 14px;
-  right: 14px;
+  bottom: 12px;
+  right: 12px;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   color: rgba(255, 255, 255, 0.15);
   pointer-events: none;
@@ -689,19 +482,18 @@ body {
 
 .workspace-tip {
   position: absolute;
-  top: 14px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.85);
   border: 1px solid var(--border-glass);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 20px;
   pointer-events: none;
-  font-size: 10px;
-  letter-spacing: 0.02em;
+  font-size: 9px;
   color: var(--text-secondary);
   text-align: center;
-  width: 85%;
+  width: 80%;
   box-shadow: 0 4px 15px rgba(0,0,0,0.5);
   transition: opacity 0.3s ease;
 }
@@ -722,7 +514,6 @@ body {
   z-index: 20;
   gap: 12px;
   backdrop-filter: blur(4px);
-  transition: opacity 0.3s ease;
 }
 
 .loader-overlay.hidden {
@@ -742,11 +533,11 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Floating tools */
+/* Floating controls */
 .canvas-quick-actions {
   position: absolute;
-  right: 24px;
-  bottom: 24px;
+  right: 16px;
+  bottom: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -778,15 +569,16 @@ body {
 
 /* Controls Tabs & Settings */
 .fitting-controls-tabs {
-  padding: 16px 24px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border-glass);
   background: #111115;
+  flex-shrink: 0;
 }
 
 .tab-selectors {
   display: flex;
   border-bottom: 1px solid var(--border-glass);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .selector-tab {
@@ -797,7 +589,7 @@ body {
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 500;
-  padding: 10px 0;
+  padding: 8px 0;
   cursor: pointer;
   position: relative;
   transition: var(--transition-smooth);
@@ -832,7 +624,7 @@ body {
 /* Model Cards Selection */
 .model-selection-grid {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .model-card {
@@ -840,10 +632,10 @@ body {
   background: #171720;
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-md);
-  padding: 10px;
+  padding: 8px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
@@ -858,12 +650,13 @@ body {
 }
 
 .model-avatar-container {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   overflow: hidden;
   background: #09090b;
   border: 1px solid var(--border-glass);
+  flex-shrink: 0;
 }
 
 .model-avatar {
@@ -879,13 +672,13 @@ body {
 }
 
 .model-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .model-type {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--text-secondary);
 }
 
@@ -893,41 +686,47 @@ body {
 .upload-zone {
   border: 1.5px dashed var(--border-glass);
   border-radius: var(--radius-md);
-  padding: 24px;
+  padding: 16px;
   text-align: center;
-  cursor: pointer;
   background: #171720;
   transition: var(--transition-smooth);
-}
-
-.upload-zone:hover {
-  border-color: var(--color-accent);
-  background: rgba(197, 168, 128, 0.05);
 }
 
 .upload-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--text-secondary);
 }
 
 .upload-title {
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
-.upload-subtitle {
+.upload-trigger-btn {
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-family: var(--font-body);
   font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.upload-trigger-btn:hover {
+  background: var(--color-accent);
+  color: #000000;
 }
 
 .upload-tip {
   font-size: 9px;
   color: var(--text-muted);
-  max-width: 250px;
-  margin-top: 4px;
 }
 
 .upload-actions {
@@ -936,7 +735,7 @@ body {
   align-items: center;
   background: #171720;
   border: 1px solid var(--border-glass);
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-radius: var(--radius-md);
 }
 
@@ -947,62 +746,24 @@ body {
 }
 
 .file-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  max-width: 150px;
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.upload-actions .actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn-outline {
-  background: transparent;
-  border: 1px solid var(--border-glass);
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  font-size: 11px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.action-btn-outline:hover {
-  color: var(--text-primary);
-  border-color: rgba(255,255,255,0.25);
-}
-
-.action-btn-danger {
-  background: transparent;
-  border: 1px solid var(--color-danger);
-  color: var(--color-danger);
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.action-btn-danger:hover {
-  background: var(--color-danger);
-  color: #ffffff;
-}
-
-/* Manual slider adjustments collapse panel */
+/* Slider adjustments */
 .fit-adjustments-panel {
-  padding: 18px 24px;
+  padding: 12px 20px;
   background: #15151c;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   border-top: 1px solid var(--border-glass);
-  transition: max-height 0.4s ease, padding 0.4s ease;
-  overflow: hidden;
+  flex-shrink: 0;
+  overflow-y: auto;
 }
 
 .fit-adjustments-panel.collapse {
@@ -1010,10 +771,11 @@ body {
   padding-top: 0;
   padding-bottom: 0;
   border-top-color: transparent;
+  display: none !important;
 }
 
 .panel-subtitle {
-  font-size: 11px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   color: var(--color-accent);
   font-weight: 700;
@@ -1023,18 +785,19 @@ body {
 .control-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .control-label {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
 }
 
 .fitting-slider {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 4px;
   background: #252530;
@@ -1044,20 +807,18 @@ body {
 
 .fitting-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--color-accent);
   cursor: pointer;
-  box-shadow: 0 0 5px rgba(0,0,0,0.5);
-  transition: transform 0.1s ease;
 }
 
-.fitting-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+/* AI OCCASION STYLIST */
+#panel-stylist {
+  background-color: var(--bg-surface);
 }
 
-/* AI OCCASION STYLIST PANEL */
 .stylist-container {
   display: flex;
   flex-direction: column;
@@ -1164,12 +925,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .report-header {
@@ -1275,12 +1030,6 @@ body {
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-md);
   padding: 14px;
-  transition: var(--transition-smooth);
-}
-
-.tip-section:hover {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.15);
 }
 
 .tip-section-title {
@@ -1288,7 +1037,6 @@ body {
   font-weight: 600;
   margin-bottom: 6px;
   color: var(--color-accent);
-  letter-spacing: 0.02em;
 }
 
 .tip-section p {
@@ -1343,7 +1091,6 @@ body {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-smooth);
 }
 
 .chat-input-box button:hover {
@@ -1408,12 +1155,6 @@ body {
   max-width: 440px;
   padding: 24px;
   box-shadow: var(--shadow-premium);
-  animation: modalScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes modalScale {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
 }
 
 .modal-header {
@@ -1536,114 +1277,128 @@ body {
   background: var(--color-accent-hover);
 }
 
-/* =======================================================
-   MOBILE EMULATOR SPECIAL MEDIA QUERIES (Targets .mobile-shell)
-   ======================================================= */
-.mobile-shell .app-header {
-  padding: 0 16px;
+/* MOBILE BOTTOM TAB BAR STYLING */
+.mobile-tab-nav {
+  display: none; /* Hidden on desktop */
   height: 60px;
-}
-
-.mobile-shell .brand-title {
-  font-size: 16px;
-}
-
-.mobile-shell .brand-subtitle {
-  font-size: 6px;
-}
-
-.mobile-shell .app-nav {
-  gap: 12px;
-}
-
-.mobile-shell .nav-link {
-  font-size: 9px;
-  letter-spacing: 0.08em;
-}
-
-/* Make panel grids stack */
-.mobile-shell .app-main {
-  flex-direction: column;
+  background-color: var(--bg-surface-glass);
+  border-top: 1px solid var(--border-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  justify-content: space-around;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 100;
   position: relative;
-}
-
-.mobile-shell .panel-left {
   width: 100%;
-  height: 50%;
-  border-right: none;
-  border-bottom: 1px solid var(--border-glass);
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 10;
 }
 
-.mobile-shell .panel-right {
-  width: 100%;
+.mobile-tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  padding: 6px 12px;
+  transition: var(--transition-smooth);
+  width: 33%;
   height: 100%;
-  padding: 10px;
-  /* Shift down slightly if a left panel is open, or scale down */
+  justify-content: center;
 }
 
-/* When a left panel is open on mobile, it slides down or covers the top half */
-.mobile-shell .panel-left.active {
-  height: calc(100% - 240px); /* Leave room for canvas */
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  background-color: rgba(18,18,22,0.98);
+.mobile-tab-btn svg {
+  color: var(--text-secondary);
+  transition: var(--transition-smooth);
 }
 
-.mobile-shell .fitting-room-container {
-  height: 100%;
-  max-width: 100%;
-  border-radius: var(--radius-md);
+.mobile-tab-btn:hover,
+.mobile-tab-btn.active {
+  color: var(--color-accent);
 }
 
-.mobile-shell .canvas-container {
-  margin: 8px;
-  max-width: 320px;
+.mobile-tab-btn:hover svg,
+.mobile-tab-btn.active svg {
+  color: var(--color-accent);
 }
 
-.mobile-shell .product-grid {
-  padding: 12px;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+
+
+/* =======================================================
+   RESPONSIVE DESIGN (TABLETS & PHONES)
+   ======================================================= */
+   
+/* Mobile / Tablet Views (Single active tab display) */
+@media screen and (max-width: 1024px) {
+  
+  .app-panel {
+    display: none; /* Hide all panels on mobile by default */
+    width: 100% !important;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+  }
+  
+  .app-panel.active {
+    display: flex; /* Show only active tab panel */
+  }
+  
+  #panel-fitroom {
+    padding: 10px;
+    z-index: 1; /* Keep canvas behind menu popups */
+  }
+  
+  .fitting-room-container {
+    max-height: 100%;
+    border-radius: var(--radius-md);
+  }
+  
+  .canvas-container {
+    max-width: 320px;
+  }
+  
+  .product-grid {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  /* Show Mobile Bottom Navigation Tab Bar */
+  .mobile-tab-nav {
+    display: flex;
+  }
 }
 
-.mobile-shell .fitting-controls-tabs {
-  padding: 10px 16px;
-}
-
-.mobile-shell .model-selection-grid {
-  gap: 8px;
-}
-
-.mobile-shell .model-card {
-  padding: 8px;
-  gap: 8px;
-}
-
-.mobile-shell .model-avatar-container {
-  width: 32px;
-  height: 32px;
-}
-
-.mobile-shell .model-name {
-  font-size: 11px;
-}
-
-.mobile-shell .stylist-input-group {
-  padding: 16px;
-}
-
-.mobile-shell .recommendations-box {
-  padding: 16px;
-}
-
-.mobile-shell .tip-section {
-  padding: 10px;
-}
-
-.mobile-shell .fit-adjustments-panel {
-  padding: 10px 16px;
-  gap: 10px;
+/* Desktop Wide View (Gorgeous 3-Column Split Panel) */
+@media screen and (min-width: 1025px) {
+  .app-panel {
+    display: flex !important; /* Force show all panels */
+  }
+  
+  #panel-shop {
+    width: 380px;
+    border-right: 1px solid var(--border-glass);
+    flex-shrink: 0;
+  }
+  
+  #panel-fitroom {
+    flex: 1;
+    border-right: 1px solid var(--border-glass);
+    border-left: 1px solid var(--border-glass);
+    background-color: var(--bg-main);
+  }
+  
+  #panel-stylist {
+    width: 380px;
+    flex-shrink: 0;
+  }
+  
+  .mobile-tab-nav {
+    display: none !important;
+  }
 }

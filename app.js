@@ -205,12 +205,10 @@ const STATE = {
 
 // 5. DOM ELEMENTS
 const DOM = {
-  viewLaptop: document.getElementById('btn-view-laptop'),
-  viewMobile: document.getElementById('btn-view-mobile'),
-  emulatorShell: document.getElementById('emulator-shell'),
   navShop: document.getElementById('btn-nav-shop'),
   navStylist: document.getElementById('btn-nav-stylist'),
   panelShop: document.getElementById('panel-shop'),
+  panelFitroom: document.getElementById('panel-fitroom'),
   panelStylist: document.getElementById('panel-stylist'),
   productGrid: document.getElementById('product-grid'),
   searchInput: document.getElementById('search-input'),
@@ -229,13 +227,9 @@ const DOM = {
   
   uploadZone: document.getElementById('upload-zone'),
   photoUploadInput: document.getElementById('photo-upload-input'),
-  photoCaptureInput: document.getElementById('photo-capture-input'),
-  btnTriggerGallery: document.getElementById('btn-trigger-gallery'),
-  btnTriggerCamera: document.getElementById('btn-trigger-camera'),
   uploadStatusPanel: document.getElementById('upload-status-panel'),
   uploadedFileName: document.getElementById('uploaded-file-name'),
   btnClearUpload: document.getElementById('btn-clear-upload'),
-  btnUseCam: document.getElementById('btn-use-cam'),
   
   manualAdjustPanel: document.getElementById('manual-adjust-panel'),
   sliderPosY: document.getElementById('slider-pos-y'),
@@ -279,7 +273,10 @@ const DOM = {
   cartItemsContainer: document.getElementById('cart-items-container'),
   cartSummarySection: document.getElementById('cart-summary-section'),
   cartTotal: document.getElementById('cart-total'),
-  cartBadge: document.getElementById('cart-badge')
+  cartBadge: document.getElementById('cart-badge'),
+  
+  // Mobile Tab Navigation
+  mobileTabBtns: document.querySelectorAll('.mobile-tab-nav .mobile-tab-btn')
 };
 
 // Canvas context
@@ -293,18 +290,24 @@ function init() {
   
   // Set up default fit sliders values
   syncSliderLabels();
+  
+  // If on mobile viewport, initialize active tab
+  if (window.innerWidth <= 1024) {
+    switchTab('shop');
+  }
 }
 
 // 7. EVENT BINDINGS
+// 7. EVENT BINDINGS
 function bindEvents() {
-  // Shell View Mode Toggles
-  DOM.viewLaptop.addEventListener('click', () => setViewMode('laptop'));
-  DOM.viewMobile.addEventListener('click', () => setViewMode('mobile'));
-  
-  // SPA Sidebar Panel Navigation
-  DOM.navShop.addEventListener('click', () => switchLeftPanel('shop'));
-  DOM.navStylist.addEventListener('click', () => switchLeftPanel('stylist'));
-  
+  // Mobile Tab Navigation Events
+  DOM.mobileTabBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const target = e.currentTarget.dataset.target;
+      switchTab(target);
+    });
+  });
+
   // Search & Filters
   DOM.searchInput.addEventListener('input', handleSearch);
   DOM.categoryBtns.forEach(btn => {
@@ -358,25 +361,10 @@ function bindEvents() {
   });
   
   // Photo Upload drag and drop events
-  DOM.uploadZone.addEventListener('click', (e) => {
-    if (e.target !== DOM.btnTriggerCamera && !DOM.btnTriggerCamera.contains(e.target) &&
-        e.target !== DOM.btnTriggerGallery && !DOM.btnTriggerGallery.contains(e.target)) {
-      DOM.photoUploadInput.click();
-    }
-  });
-  
-  DOM.btnTriggerGallery.addEventListener('click', (e) => {
-    e.stopPropagation();
+  DOM.uploadZone.addEventListener('click', () => {
     DOM.photoUploadInput.click();
   });
-  
-  DOM.btnTriggerCamera.addEventListener('click', (e) => {
-    e.stopPropagation();
-    DOM.photoCaptureInput.click();
-  });
-  
   DOM.photoUploadInput.addEventListener('change', handlePhotoUpload);
-  DOM.photoCaptureInput.addEventListener('change', handlePhotoUpload);
   
   DOM.uploadZone.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -394,11 +382,6 @@ function bindEvents() {
   });
   
   DOM.btnClearUpload.addEventListener('click', clearPhotoUpload);
-  DOM.btnUseCam.addEventListener('click', () => {
-    alert("Camera API requested. (Simulating webcam capture...)");
-    // Mock web cam capture with random high-quality silhouette
-    simulateWebcamCapture();
-  });
   
   // Fit Adjustment Sliders
   DOM.sliderPosY.addEventListener('input', (e) => handleSliderChange('y', parseInt(e.target.value)));
@@ -473,35 +456,28 @@ function renderProducts(productsList) {
 }
 
 // 9. EMULATOR & SPA ACTIONS
-function setViewMode(mode) {
-  if (mode === 'laptop') {
-    DOM.viewLaptop.classList.add('active-mode');
-    DOM.viewMobile.classList.remove('active-mode');
-    DOM.emulatorShell.className = 'laptop-shell';
-  } else {
-    DOM.viewLaptop.classList.remove('active-mode');
-    DOM.viewMobile.classList.add('active-mode');
-    DOM.emulatorShell.className = 'mobile-shell';
-  }
-  // Force canvas size adjustments in cache
-  drawWorkspace();
-}
+function switchTab(tabId) {
+  // Update mobile bottom tab buttons active class
+  DOM.mobileTabBtns.forEach(btn => {
+    if (btn.dataset.target === tabId) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
 
-function switchLeftPanel(panelName) {
-  if (panelName === 'shop') {
-    DOM.navShop.classList.add('active');
-    DOM.navStylist.classList.remove('active');
-    DOM.panelShop.classList.add('active');
-    DOM.panelStylist.classList.remove('active');
-  } else {
-    DOM.navShop.classList.remove('active');
-    DOM.navStylist.classList.add('active');
-    DOM.panelShop.classList.remove('active');
-    DOM.panelStylist.classList.add('active');
-    
-    // Automatically trigger recommendations report if product and event are chosen
-    generateStylistReport();
-  }
+  // Update panels active class
+  const panels = [DOM.panelShop, DOM.panelFitroom, DOM.panelStylist];
+  panels.forEach(panel => {
+    if (panel.id === `panel-${tabId}`) {
+      panel.classList.add('active');
+    } else {
+      panel.classList.remove('active');
+    }
+  });
+
+  // Re-draw canvas workspace
+  drawWorkspace();
 }
 
 // 10. SEARCH & FILTER LOGIC
@@ -622,7 +598,6 @@ function loadCustomPhoto() {
 function clearPhotoUpload() {
   STATE.customPhotoSrc = null;
   DOM.photoUploadInput.value = '';
-  DOM.photoCaptureInput.value = '';
   DOM.uploadStatusPanel.classList.add('hidden');
   DOM.uploadZone.classList.remove('remove');
   DOM.uploadZone.classList.remove('hidden');
@@ -703,7 +678,7 @@ function tryOnProduct(product) {
   updateStatusText(`Dressing up: ${product.name}...`);
   showLoader(true);
   
-  preloadImage(product.image, (img) => {
+  preloadGarmentImage(product.image, (img) => {
     STATE.imagesCache['garment'] = img;
     showLoader(false);
     
@@ -731,6 +706,11 @@ function tryOnProduct(product) {
     
     // Add shopping bag/rack add button to status panel
     addQuickActionToStatus();
+
+    // Auto-switch to fitroom panel on mobile layout
+    if (window.innerWidth <= 1024) {
+      switchTab('fitroom');
+    }
   });
 }
 
@@ -849,7 +829,7 @@ function drawWorkspace() {
     drawDummySilhouette();
   }
   
-  // C. Draw active garment overlay
+  // C. Draw active garment overlay with natural blending
   if (STATE.currentProduct && garmentImg) {
     const { x, y, scale, rotate, opacity } = STATE.fitSettings;
     
@@ -863,6 +843,10 @@ function drawWorkspace() {
     ctx.save();
     ctx.globalAlpha = opacity / 100;
     
+    // Use 'multiply' blend mode to make the garment blend with the model's skin/body
+    // This creates a natural "wearing" effect instead of a flat overlay
+    ctx.globalCompositeOperation = 'multiply';
+    
     // Translate origin to central offset position
     ctx.translate(DOM.canvas.width / 2 + x, DOM.canvas.height / 2 + y);
     
@@ -872,15 +856,18 @@ function drawWorkspace() {
     // Draw centering image offsets
     ctx.drawImage(garmentImg, -finalWidth / 2, -finalHeight / 2, finalWidth, finalHeight);
     
+    // Reset blend mode before drawing UI overlays (bounding box)
+    ctx.globalCompositeOperation = 'source-over';
+    
     // Draw interactive dashed bounding box overlay if in manual alignment mode
     if (STATE.fitMode === 'manual' && STATE.isDragging) {
-      ctx.strokeStyle = 'var(--color-accent)';
+      ctx.strokeStyle = '#c5a880';
       ctx.lineWidth = 1.5;
       ctx.setLineDash([5, 5]);
       ctx.strokeRect(-finalWidth / 2 - 5, -finalHeight / 2 - 5, finalWidth + 10, finalHeight + 10);
       
       // Control corners handles
-      ctx.fillStyle = 'var(--color-accent)';
+      ctx.fillStyle = '#c5a880';
       ctx.setLineDash([]);
       const size = 6;
       ctx.fillRect(-finalWidth / 2 - 5 - size/2, -finalHeight / 2 - 5 - size/2, size, size);
@@ -1035,11 +1022,10 @@ function generateStylistReport() {
     return;
   }
   
-  // Switch to Stylist navigation tab so users see the report panel instantly
-  DOM.navShop.classList.remove('active');
-  DOM.navStylist.classList.add('active');
-  DOM.panelShop.classList.remove('active');
-  DOM.panelStylist.classList.add('active');
+  // Switch to Stylist navigation tab on mobile view
+  if (window.innerWidth <= 1024) {
+    switchTab('stylist');
+  }
   
   // Clear any old chatbot bubbles
   DOM.chatResponse.classList.add('hidden');
@@ -1207,6 +1193,93 @@ function preloadImage(src, callback) {
     updateStatusText("Error loading image asset.");
   };
   img.src = src;
+}
+
+// 17b. GARMENT IMAGE LOADER WITH BACKGROUND REMOVAL
+// Loads the garment image and strips the white/light background to make it transparent,
+// so it composites naturally over the model instead of appearing as a rectangular overlay.
+function preloadGarmentImage(src, callback) {
+  preloadImage(src, (rawImg) => {
+    const cleaned = removeWhiteBackground(rawImg);
+    callback(cleaned);
+  });
+}
+
+// Removes white/light background from a garment product photo.
+// Uses an offscreen canvas to read pixel data, converts near-white pixels to transparent,
+// and applies soft edge feathering for a natural composite look.
+function removeWhiteBackground(img) {
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = img.width;
+  offCanvas.height = img.height;
+  const offCtx = offCanvas.getContext('2d');
+  offCtx.drawImage(img, 0, 0);
+  
+  const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
+  const data = imageData.data;
+  
+  // Determine the background color by sampling corner pixels.
+  // If corners are bright/white, we treat that as the background.
+  const corners = [
+    0,                                                    // top-left
+    (offCanvas.width - 1) * 4,                            // top-right
+    (offCanvas.height - 1) * offCanvas.width * 4,         // bottom-left
+    ((offCanvas.height - 1) * offCanvas.width + offCanvas.width - 1) * 4  // bottom-right
+  ];
+  
+  let bgR = 0, bgG = 0, bgB = 0, cornerCount = 0;
+  corners.forEach(idx => {
+    const r = data[idx], g = data[idx+1], b = data[idx+2];
+    // Only count if pixel is light (likely background)
+    if (r > 180 && g > 180 && b > 180) {
+      bgR += r; bgG += g; bgB += b;
+      cornerCount++;
+    }
+  });
+  
+  // If no light corners found, the image may already have a non-white background
+  if (cornerCount === 0) {
+    // Return the original image as-is
+    return img;
+  }
+  
+  bgR = Math.round(bgR / cornerCount);
+  bgG = Math.round(bgG / cornerCount);
+  bgB = Math.round(bgB / cornerCount);
+  
+  // Sensitivity threshold: how close a pixel needs to be to the background color
+  // to be considered background. Higher = more aggressive removal.
+  const threshold = 60;
+  // Feather range: pixels within this distance from the threshold edge get partial transparency
+  const featherRange = 30;
+  
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i+1], b = data[i+2];
+    
+    // Calculate color distance from background
+    const dist = Math.sqrt(
+      (r - bgR) * (r - bgR) + 
+      (g - bgG) * (g - bgG) + 
+      (b - bgB) * (b - bgB)
+    );
+    
+    if (dist < threshold) {
+      // Pixel is very close to background color — make fully transparent
+      data[i+3] = 0;
+    } else if (dist < threshold + featherRange) {
+      // Feather zone: gradual transparency for smooth edges
+      const alpha = Math.round(((dist - threshold) / featherRange) * 255);
+      data[i+3] = Math.min(data[i+3], alpha);
+    }
+    // else: keep pixel fully opaque (it's part of the garment)
+  }
+  
+  offCtx.putImageData(imageData, 0, 0);
+  
+  // Return a new Image element from the processed canvas
+  const resultImg = new Image();
+  resultImg.src = offCanvas.toDataURL('image/png');
+  return resultImg;
 }
 
 function showLoader(show) {
