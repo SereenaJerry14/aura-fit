@@ -1,0 +1,18 @@
+{
+  "name": "Aura Fashion Virtual Fitting Room",
+  "short_name": "Aura Fit",
+  "description": "Premium virtual try-on room and AI event styling advisor.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0c",
+  "theme_color": "#c5a880",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/models/model_female.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
