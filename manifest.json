@@ -2,17 +2,84 @@
   "name": "Aura Fashion Virtual Fitting Room",
   "short_name": "Aura Fit",
   "description": "Premium virtual try-on room and AI event styling advisor.",
+  "id": "/aura-fit-room",
   "start_url": "./index.html",
+  "scope": "./",
+  "lang": "en-US",
+  "dir": "ltr",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "window-controls-overlay",
+    "minimal-ui"
+  ],
   "background_color": "#0a0a0c",
   "theme_color": "#c5a880",
   "orientation": "portrait",
+  "categories": [
+    "shopping",
+    "fashion",
+    "lifestyle"
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "shortcuts": [
+    {
+      "name": "AI Stylist Assistant",
+      "short_name": "AI Stylist",
+      "description": "Get instant dress-code matching score and accessories advice",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Shop Catalog",
+      "short_name": "Shop",
+      "description": "Browse active dresses and tailored outfits",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
-      "src": "assets/models/model_female.png",
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshots/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Aura Fashion Desktop Showroom"
+    },
+    {
+      "src": "assets/screenshots/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Aura Fashion Mobile Fitting Assistant"
     }
   ]
 }

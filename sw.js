@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aura-fit-v1';
+const CACHE_NAME = 'aura-fit-v2';
 const ASSETS = [
   './index.html',
   './styles.css',
@@ -10,7 +10,11 @@ const ASSETS = [
   './assets/clothes/dress_gown.png',
   './assets/clothes/dress_suit.png',
   './assets/clothes/dress_cocktail.png',
-  './assets/clothes/dress_jumpsuit.png'
+  './assets/clothes/dress_jumpsuit.png',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
+  './assets/screenshots/screenshot-desktop.png',
+  './assets/screenshots/screenshot-mobile.png'
 ];
 
 // Install Service Worker
