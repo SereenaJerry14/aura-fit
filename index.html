@@ -24,6 +24,9 @@
       });
     }
   </script>
+  <!-- Three.js and OrbitControls for 3D Virtual Try-On -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
   
@@ -90,6 +93,11 @@
               </div>
             </div>
             
+            <div class="fitting-modes">
+              <button id="btn-mode-2d" class="mode-tab-btn active">2D Fit</button>
+              <button id="btn-mode-3d" class="mode-tab-btn">3D Fit</button>
+            </div>
+            
             <div class="fitting-actions">
               <button id="btn-reset-fit" class="action-btn-sm" title="Reset Fit Position">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
@@ -107,7 +115,14 @@
 
             <div class="canvas-container">
               <canvas id="fitting-canvas" width="600" height="750"></canvas>
+              <div id="fitting-3d-container" class="hidden"></div>
               <div class="canvas-watermark">AURA FIT™</div>
+              
+              <!-- Camera alignment overlay guide -->
+              <div id="camera-guide-overlay" class="camera-guide hidden">
+                <div class="guide-ellipse"></div>
+                <div class="guide-shoulders"></div>
+              </div>
               
               <!-- Quick Tooltip -->
               <div class="workspace-tip" id="workspace-tip">
@@ -129,6 +144,7 @@
             <div class="tab-selectors">
               <button class="selector-tab active" data-tab="models">Standard Models</button>
               <button class="selector-tab" data-tab="upload">Try It On Yourself</button>
+              <button class="selector-tab" data-tab="measurements">My Measurements</button>
             </div>
 
             <!-- Model Choices Panel -->
@@ -155,17 +171,42 @@
               </div>
             </div>
 
-            <!-- Upload Panel -->
+            <!-- Upload Panel with sub-tabs for webcam vs file upload -->
             <div class="control-panel-content" id="panel-upload">
-              <div class="upload-zone" id="upload-zone">
-                <input type="file" id="photo-upload-input" accept="image/*" class="hidden">
-                <div class="upload-content">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                  <p class="upload-title">Camera & Gallery Upload</p>
-                  <button type="button" class="upload-trigger-btn">📷 Select or Take Photo</button>
-                  <span class="upload-tip">Wear form-fitting clothes and face forward.</span>
+              <div class="upload-sub-tabs">
+                <button type="button" id="btn-subtab-upload" class="subtab-btn active">📂 Upload Photo</button>
+                <button type="button" id="btn-subtab-camera" class="subtab-btn">📷 Live Camera</button>
+              </div>
+
+              <!-- Upload Subpanel -->
+              <div id="subpanel-upload" class="subpanel-content active">
+                <div class="upload-zone" id="upload-zone">
+                  <input type="file" id="photo-upload-input" accept="image/*" class="hidden">
+                  <div class="upload-content">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    <p class="upload-title">Camera & Gallery Upload</p>
+                    <button type="button" class="upload-trigger-btn">📷 Select Photo</button>
+                    <span class="upload-tip">Wear form-fitting clothes and face forward.</span>
+                  </div>
                 </div>
               </div>
+
+              <!-- Live Camera Subpanel -->
+              <div id="subpanel-camera" class="subpanel-content">
+                <div class="camera-panel-wrapper">
+                  <div class="camera-actions-bar">
+                    <select id="camera-select" class="camera-select-dropdown">
+                      <option value="">Default Camera</option>
+                    </select>
+                    <div class="camera-btn-group">
+                      <button type="button" id="btn-camera-toggle" class="camera-action-btn start">Start Camera</button>
+                      <button type="button" id="btn-camera-freeze" class="camera-action-btn freeze hidden">Freeze Frame</button>
+                    </div>
+                  </div>
+                  <video id="webcam-video" autoplay playsinline muted class="hidden"></video>
+                </div>
+              </div>
+
               <div class="upload-actions hidden" id="upload-status-panel">
                 <div class="uploaded-file-info">
                   <span class="file-icon">👤</span>
@@ -173,6 +214,47 @@
                 </div>
                 <div class="actions">
                   <button id="btn-clear-upload" class="action-btn-danger">Remove</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Measurements Panel -->
+            <div class="control-panel-content" id="panel-measurements">
+              <div class="measurements-container">
+                <div class="measurement-row">
+                  <span class="measurement-label">Base Silhouette:</span>
+                  <div class="gender-btn-group">
+                    <button type="button" class="gender-tab-btn active" data-gender="female">Female</button>
+                    <button type="button" class="gender-tab-btn" data-gender="male">Male</button>
+                  </div>
+                </div>
+                <div class="control-group">
+                  <div class="control-label">
+                    <span>Height</span>
+                    <span id="val-measure-height">165cm</span>
+                  </div>
+                  <input type="range" id="slider-measure-height" min="140" max="210" value="165" class="fitting-slider">
+                </div>
+                <div class="control-group">
+                  <div class="control-label">
+                    <span>Chest / Bust</span>
+                    <span id="val-measure-chest">90cm</span>
+                  </div>
+                  <input type="range" id="slider-measure-chest" min="70" max="130" value="90" class="fitting-slider">
+                </div>
+                <div class="control-group">
+                  <div class="control-label">
+                    <span>Waist</span>
+                    <span id="val-measure-waist">70cm</span>
+                  </div>
+                  <input type="range" id="slider-measure-waist" min="60" max="120" value="70" class="fitting-slider">
+                </div>
+                <div class="control-group">
+                  <div class="control-label">
+                    <span>Hips</span>
+                    <span id="val-measure-hips">95cm</span>
+                  </div>
+                  <input type="range" id="slider-measure-hips" min="70" max="140" value="95" class="fitting-slider">
                 </div>
               </div>
             </div>
@@ -215,6 +297,31 @@
                 <span id="val-opacity">100%</span>
               </div>
               <input type="range" id="slider-opacity" min="10" max="100" value="100" class="fitting-slider">
+            </div>
+          </div>
+
+          <!-- Size & Fit Advisor Panel -->
+          <div class="fit-advisor-panel collapse" id="fit-advisor-panel">
+            <div class="panel-subtitle">Fit & Size Analysis</div>
+            <div class="advisor-flex-row">
+              <div class="advisor-main-stats">
+                <div class="rec-size-box">
+                  <span class="advisor-label">RECOMMENDED SIZE</span>
+                  <span id="val-recommended-size" class="rec-size-value">-</span>
+                </div>
+                <div class="fit-score-box">
+                  <span class="advisor-label">FIT COMPATIBILITY</span>
+                  <div class="score-row">
+                    <span id="val-fit-score" class="fit-score-value">0%</span>
+                    <div class="compatibility-progress">
+                      <div id="compatibility-bar" class="progress-bar-fill" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="fit-areas-grid" id="fit-areas-grid">
+                <!-- Dynamically populated sizing report (Chest, Waist, Hips details) -->
+              </div>
             </div>
           </div>
 

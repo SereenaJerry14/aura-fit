@@ -186,7 +186,7 @@ const STYLIST_INTELLIGENCE = {
 
 // 4. MAIN APP STATE
 const STATE = {
-  activeModel: 'female',      // 'female', 'male', or 'custom'
+  activeModel: 'female',      // 'female', 'male', 'custom', or 'measurements'
   customPhotoSrc: null,      // base64 or URL of uploaded image
   currentProduct: null,      // active garment product object
   cart: [],                  // rack items list
@@ -200,7 +200,31 @@ const STATE = {
   fitMode: 'auto',           // 'auto' or 'manual'
   isDragging: false,
   dragStart: { x: 0, y: 0 },
-  imagesCache: {}            // Preloaded images cache
+  imagesCache: {},            // Preloaded images cache
+  
+  // New States
+  tryonMode: '2d',           // '2d' or '3d'
+  webcamStream: null,
+  webcamVideo: null,
+  isWebcamActive: false,
+  isWebcamFrozen: false,
+  frozenFrameData: null,
+  cameraDeviceId: '',
+  measurements: {
+    gender: 'female',
+    height: 165,
+    chest: 90,
+    waist: 70,
+    hips: 95
+  },
+  three: {
+    scene: null,
+    camera: null,
+    renderer: null,
+    controls: null,
+    mannequin: null,
+    garment: null
+  }
 };
 
 // 5. DOM ELEMENTS
@@ -215,21 +239,49 @@ const DOM = {
   categoryBtns: document.querySelectorAll('.category-tabs .tab-btn'),
   
   canvas: document.getElementById('fitting-canvas'),
+  fitting3DContainer: document.getElementById('fitting-3d-container'),
+  cameraGuide: document.getElementById('camera-guide-overlay'),
   canvasLoader: document.getElementById('canvas-loader'),
   workspaceTip: document.getElementById('workspace-tip'),
   fittingStatusText: document.getElementById('fitting-status-text'),
   btnResetFit: document.getElementById('btn-reset-fit'),
   
+  // 2D vs 3D Modes
+  btnMode2D: document.getElementById('btn-mode-2d'),
+  btnMode3D: document.getElementById('btn-mode-3d'),
+  
   controlTabs: document.querySelectorAll('.tab-selectors .selector-tab'),
   panelModels: document.getElementById('panel-models'),
   panelUpload: document.getElementById('panel-upload'),
+  panelMeasurements: document.getElementById('panel-measurements'),
   modelCards: document.querySelectorAll('.model-card'),
+  
+  // Upload and Camera sub-elements
+  btnSubtabUpload: document.getElementById('btn-subtab-upload'),
+  btnSubtabCamera: document.getElementById('btn-subtab-camera'),
+  subpanelUpload: document.getElementById('subpanel-upload'),
+  subpanelCamera: document.getElementById('subpanel-camera'),
+  cameraSelect: document.getElementById('camera-select'),
+  btnCameraToggle: document.getElementById('btn-camera-toggle'),
+  btnCameraFreeze: document.getElementById('btn-camera-freeze'),
+  webcamVideo: document.getElementById('webcam-video'),
   
   uploadZone: document.getElementById('upload-zone'),
   photoUploadInput: document.getElementById('photo-upload-input'),
   uploadStatusPanel: document.getElementById('upload-status-panel'),
   uploadedFileName: document.getElementById('uploaded-file-name'),
   btnClearUpload: document.getElementById('btn-clear-upload'),
+  
+  // Measurements controls
+  genderTabBtns: document.querySelectorAll('.gender-tab-btn'),
+  sliderMeasureHeight: document.getElementById('slider-measure-height'),
+  sliderMeasureChest: document.getElementById('slider-measure-chest'),
+  sliderMeasureWaist: document.getElementById('slider-measure-waist'),
+  sliderMeasureHips: document.getElementById('slider-measure-hips'),
+  valMeasureHeight: document.getElementById('val-measure-height'),
+  valMeasureChest: document.getElementById('val-measure-chest'),
+  valMeasureWaist: document.getElementById('val-measure-waist'),
+  valMeasureHips: document.getElementById('val-measure-hips'),
   
   manualAdjustPanel: document.getElementById('manual-adjust-panel'),
   sliderPosY: document.getElementById('slider-pos-y'),
@@ -248,6 +300,13 @@ const DOM = {
   btnZoomOut: document.getElementById('btn-zoom-out'),
   btnRotateL: document.getElementById('btn-rotate-l'),
   btnRotateR: document.getElementById('btn-rotate-r'),
+  
+  // Fit advisor
+  fitAdvisorPanel: document.getElementById('fit-advisor-panel'),
+  valRecommendedSize: document.getElementById('val-recommended-size'),
+  valFitScore: document.getElementById('val-fit-score'),
+  compatibilityBar: document.getElementById('compatibility-bar'),
+  fitAreasGrid: document.getElementById('fit-areas-grid'),
   
   occasionSelect: document.getElementById('occasion-select'),
   stylistResults: document.getElementById('stylist-results'),
@@ -291,13 +350,15 @@ function init() {
   // Set up default fit sliders values
   syncSliderLabels();
   
+  // Set up default measurements labels
+  syncMeasurementUI();
+  
   // If on mobile viewport, initialize active tab
   if (window.innerWidth <= 1024) {
     switchTab('shop');
   }
 }
 
-// 7. EVENT BINDINGS
 // 7. EVENT BINDINGS
 function bindEvents() {
   // Mobile Tab Navigation Events
@@ -328,36 +389,163 @@ function bindEvents() {
     });
   });
   
-  // Fitting Workspace Tabs (Models vs Upload Photo)
+  // 2D vs 3D Try-On Mode Selectors
+  DOM.btnMode2D.addEventListener('click', () => {
+    switchTryonMode('2d');
+  });
+  DOM.btnMode3D.addEventListener('click', () => {
+    switchTryonMode('3d');
+  });
+  
+  // Fitting Workspace Tabs (Models vs Upload vs Measurements)
   DOM.controlTabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
       DOM.controlTabs.forEach(t => t.classList.remove('active'));
       e.target.classList.add('active');
       
       const targetTab = e.target.dataset.tab;
+      
+      // Hide all panels
+      DOM.panelModels.classList.remove('active');
+      DOM.panelUpload.classList.remove('active');
+      DOM.panelMeasurements.classList.remove('active');
+      
       if (targetTab === 'models') {
         DOM.panelModels.classList.add('active');
-        DOM.panelUpload.classList.remove('active');
+        if (STATE.isWebcamActive) stopWebcam();
         
         // Revert back to selected standard mannequin card
         const activeCard = document.querySelector('.model-card.active');
         if (activeCard) {
           selectModel(activeCard.dataset.model);
         }
-      } else {
-        DOM.panelModels.classList.remove('active');
+      } else if (targetTab === 'upload') {
         DOM.panelUpload.classList.add('active');
-        
-        // If a photo was previously uploaded, load it. Otherwise alert user to upload.
-        if (STATE.customPhotoSrc) {
-          selectModel('custom');
-        } else {
+        if (DOM.btnSubtabCamera.classList.contains('active')) {
           STATE.activeModel = 'custom';
           drawWorkspace();
-          updateStatusText("Upload a photo to see virtual fitting");
+          updateStatusText("Camera active. Start camera to try on dress live.");
+        } else {
+          if (STATE.customPhotoSrc) {
+            selectModel('custom');
+          } else {
+            STATE.activeModel = 'custom';
+            drawWorkspace();
+            updateStatusText("Upload a photo to see virtual fitting");
+          }
         }
+      } else if (targetTab === 'measurements') {
+        DOM.panelMeasurements.classList.add('active');
+        if (STATE.isWebcamActive) stopWebcam();
+        
+        STATE.activeModel = 'measurements';
+        updateStatusText("Personalized body measurements active.");
+        drawWorkspace();
+        runSizeAdvisor();
       }
     });
+  });
+  
+  // Try It On Yourself Sub-tabs (Upload vs Camera)
+  DOM.btnSubtabUpload.addEventListener('click', () => {
+    DOM.btnSubtabUpload.classList.add('active');
+    DOM.btnSubtabCamera.classList.remove('active');
+    DOM.subpanelUpload.classList.add('active');
+    DOM.subpanelCamera.classList.remove('active');
+    
+    if (STATE.isWebcamActive) stopWebcam();
+    if (STATE.customPhotoSrc) {
+      selectModel('custom');
+    }
+  });
+  
+  DOM.btnSubtabCamera.addEventListener('click', () => {
+    DOM.btnSubtabUpload.classList.remove('active');
+    DOM.btnSubtabCamera.classList.add('active');
+    DOM.subpanelUpload.classList.remove('active');
+    DOM.subpanelCamera.classList.add('active');
+    
+    STATE.activeModel = 'custom';
+    updateStatusText("Camera ready. Click Start Camera to begin live feed.");
+    drawWorkspace();
+    listCameraDevices();
+  });
+  
+  // Webcam Control Triggers
+  DOM.btnCameraToggle.addEventListener('click', toggleWebcam);
+  DOM.btnCameraFreeze.addEventListener('click', () => {
+    if (STATE.isWebcamFrozen) {
+      unfreezeCameraFrame();
+    } else {
+      freezeCameraFrame();
+    }
+  });
+  DOM.cameraSelect.addEventListener('change', (e) => {
+    STATE.cameraDeviceId = e.target.value;
+    if (STATE.isWebcamActive) {
+      stopWebcam();
+      startWebcam();
+    }
+  });
+  
+  // Measurements Input Controls
+  DOM.genderTabBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      DOM.genderTabBtns.forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      STATE.measurements.gender = e.currentTarget.dataset.gender;
+      
+      if (STATE.tryonMode === '3d') {
+        build3DMannequin();
+      } else if (STATE.activeModel === 'measurements') {
+        drawWorkspace();
+      }
+      runSizeAdvisor();
+    });
+  });
+  
+  DOM.sliderMeasureHeight.addEventListener('input', (e) => {
+    STATE.measurements.height = parseInt(e.target.value);
+    DOM.valMeasureHeight.innerText = STATE.measurements.height + "cm";
+    if (STATE.tryonMode === '3d') {
+      build3DMannequin();
+    } else if (STATE.activeModel === 'measurements') {
+      drawWorkspace();
+    }
+    runSizeAdvisor();
+  });
+  
+  DOM.sliderMeasureChest.addEventListener('input', (e) => {
+    STATE.measurements.chest = parseInt(e.target.value);
+    DOM.valMeasureChest.innerText = STATE.measurements.chest + "cm";
+    if (STATE.tryonMode === '3d') {
+      build3DMannequin();
+    } else if (STATE.activeModel === 'measurements') {
+      drawWorkspace();
+    }
+    runSizeAdvisor();
+  });
+  
+  DOM.sliderMeasureWaist.addEventListener('input', (e) => {
+    STATE.measurements.waist = parseInt(e.target.value);
+    DOM.valMeasureWaist.innerText = STATE.measurements.waist + "cm";
+    if (STATE.tryonMode === '3d') {
+      build3DMannequin();
+    } else if (STATE.activeModel === 'measurements') {
+      drawWorkspace();
+    }
+    runSizeAdvisor();
+  });
+  
+  DOM.sliderMeasureHips.addEventListener('input', (e) => {
+    STATE.measurements.hips = parseInt(e.target.value);
+    DOM.valMeasureHips.innerText = STATE.measurements.hips + "cm";
+    if (STATE.tryonMode === '3d') {
+      build3DMannequin();
+    } else if (STATE.activeModel === 'measurements') {
+      drawWorkspace();
+    }
+    runSizeAdvisor();
   });
   
   // Photo Upload drag and drop events
@@ -704,6 +892,14 @@ function tryOnProduct(product) {
       generateStylistReport();
     }
     
+    // If in 3D mode, build 3D mesh for clothing
+    if (STATE.tryonMode === '3d') {
+      build3DGarment();
+    }
+    
+    // Run size advisor comparison
+    runSizeAdvisor();
+    
     // Add shopping bag/rack add button to status panel
     addQuickActionToStatus();
 
@@ -715,9 +911,23 @@ function tryOnProduct(product) {
 }
 
 function applyAutoAlignment() {
-  const modelType = STATE.activeModel; // 'female' or 'male'
-  const garmentId = STATE.currentProduct.id;
+  const modelType = STATE.activeModel;
   
+  if (modelType !== 'female' && modelType !== 'male') {
+    // Safely apply manual alignment defaults for custom photos / measurements silhouettes
+    STATE.fitSettings.x = 0;
+    STATE.fitSettings.y = 20;
+    STATE.fitSettings.scale = 120;
+    STATE.fitSettings.rotate = 0;
+    STATE.fitSettings.opacity = 100;
+    STATE.fitMode = 'manual';
+    
+    DOM.manualAdjustPanel.classList.remove('collapse');
+    syncSlidersFromState();
+    return;
+  }
+  
+  const garmentId = STATE.currentProduct.id;
   const align = AUTO_ALIGN_DATA[modelType][garmentId];
   if (align) {
     STATE.fitSettings.x = align.x;
@@ -783,69 +993,113 @@ function drawWorkspace() {
   const modelImg = STATE.imagesCache['model'];
   const garmentImg = STATE.imagesCache['garment'];
   
-  // A. Draw base background grid or color
-  ctx.fillStyle = '#0f0f13';
-  ctx.fillRect(0, 0, DOM.canvas.width, DOM.canvas.height);
-  
-  // Background grid lines (luxury scanner look)
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
-  ctx.lineWidth = 1;
-  const gridSize = 30;
-  for (let x = 0; x < DOM.canvas.width; x += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, DOM.canvas.height);
-    ctx.stroke();
-  }
-  for (let y = 0; y < DOM.canvas.height; y += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(DOM.canvas.width, y);
-    ctx.stroke();
+  if (STATE.tryonMode === '3d') {
+    return;
   }
   
-  // B. Draw active model
-  if (modelImg) {
-    // Compute dimensions to preserve model aspect ratio and center it
-    const modelAspect = modelImg.width / modelImg.height;
-    const canvasAspect = DOM.canvas.width / DOM.canvas.height;
-    
-    let drawW = DOM.canvas.width;
-    let drawH = DOM.canvas.height;
-    let dx = 0;
-    let dy = 0;
-    
-    if (modelAspect > canvasAspect) {
-      drawW = DOM.canvas.height * modelAspect;
-      dx = (DOM.canvas.width - drawW) / 2;
+  // A. Draw base background / feed
+  if (STATE.isWebcamActive) {
+    if (STATE.isWebcamFrozen && STATE.frozenFrameData) {
+      ctx.drawImage(STATE.frozenFrameData, 0, 0, DOM.canvas.width, DOM.canvas.height);
     } else {
-      drawH = DOM.canvas.width / modelAspect;
-      dy = (DOM.canvas.height - drawH) / 2;
+      // Mirror video feed for natural user experience
+      ctx.save();
+      ctx.translate(DOM.canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(DOM.webcamVideo, 0, 0, DOM.canvas.width, DOM.canvas.height);
+      ctx.restore();
+    }
+  } else if (STATE.activeModel === 'measurements') {
+    drawMeasurementsSilhouette();
+  } else {
+    // Draw base background color
+    ctx.fillStyle = '#0f0f13';
+    ctx.fillRect(0, 0, DOM.canvas.width, DOM.canvas.height);
+    
+    // Background grid lines (luxury scanner look)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+    ctx.lineWidth = 1;
+    const gridSize = 30;
+    for (let x = 0; x < DOM.canvas.width; x += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, DOM.canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < DOM.canvas.height; y += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(DOM.canvas.width, y);
+      ctx.stroke();
     }
     
-    ctx.drawImage(modelImg, dx, dy, drawW, drawH);
-  } else {
-    // If no model selected, draw mannequin guidelines
-    drawDummySilhouette();
+    // B. Draw active model
+    if (modelImg && STATE.activeModel !== 'custom') {
+      const modelAspect = modelImg.width / modelImg.height;
+      const canvasAspect = DOM.canvas.width / DOM.canvas.height;
+      
+      let drawW = DOM.canvas.width;
+      let drawH = DOM.canvas.height;
+      let dx = 0;
+      let dy = 0;
+      
+      if (modelAspect > canvasAspect) {
+        drawW = DOM.canvas.height * modelAspect;
+        dx = (DOM.canvas.width - drawW) / 2;
+      } else {
+        drawH = DOM.canvas.width / modelAspect;
+        dy = (DOM.canvas.height - drawH) / 2;
+      }
+      
+      ctx.drawImage(modelImg, dx, dy, drawW, drawH);
+    } else if (modelImg && STATE.activeModel === 'custom') {
+      const modelAspect = modelImg.width / modelImg.height;
+      const canvasAspect = DOM.canvas.width / DOM.canvas.height;
+      
+      let drawW = DOM.canvas.width;
+      let drawH = DOM.canvas.height;
+      let dx = 0;
+      let dy = 0;
+      
+      if (modelAspect > canvasAspect) {
+        drawW = DOM.canvas.height * modelAspect;
+        dx = (DOM.canvas.width - drawW) / 2;
+      } else {
+        drawH = DOM.canvas.width / modelAspect;
+        dy = (DOM.canvas.height - drawH) / 2;
+      }
+      ctx.drawImage(modelImg, dx, dy, drawW, drawH);
+    } else {
+      drawDummySilhouette();
+    }
   }
   
   // C. Draw active garment overlay with natural blending
   if (STATE.currentProduct && garmentImg) {
     const { x, y, scale, rotate, opacity } = STATE.fitSettings;
     
-    // Scale baseline size based on canvas width
+    // Scale size multiplier based on custom measurements if in Measurements view
+    let sizeMultiplier = 1.0;
+    if (STATE.activeModel === 'measurements') {
+      sizeMultiplier = (STATE.measurements.chest / 90) * (STATE.measurements.height / 165);
+    }
+    
     const baseWidth = DOM.canvas.width * 0.35;
     const baseHeight = baseWidth * (garmentImg.height / garmentImg.width);
     
-    const finalWidth = baseWidth * (scale / 100);
-    const finalHeight = baseHeight * (scale / 100);
+    const finalWidth = baseWidth * (scale / 100) * sizeMultiplier;
+    const finalHeight = baseHeight * (scale / 100) * sizeMultiplier;
     
     ctx.save();
     ctx.globalAlpha = opacity / 100;
     
-    // Use 'multiply' blend mode to make the garment blend with the model's skin/body
-    // This creates a natural "wearing" effect instead of a flat overlay
-    ctx.globalCompositeOperation = 'multiply';
+    // Use multiply overlay blend mode only for model photo trials (to blend with skin folds).
+    // Use regular overlay composite for live webcam or vector blueprint layouts to avoid dark staining.
+    if (!STATE.isWebcamActive && STATE.activeModel !== 'measurements') {
+      ctx.globalCompositeOperation = 'multiply';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+    }
     
     // Translate origin to central offset position
     ctx.translate(DOM.canvas.width / 2 + x, DOM.canvas.height / 2 + y);
@@ -885,6 +1139,102 @@ function drawDummySilhouette() {
   ctx.font = '14px Inter';
   ctx.textAlign = 'center';
   ctx.fillText("Select a mannequin or upload your photo", DOM.canvas.width / 2, DOM.canvas.height / 2);
+}
+
+function drawMeasurementsSilhouette() {
+  ctx.fillStyle = '#0f0f13';
+  ctx.fillRect(0, 0, DOM.canvas.width, DOM.canvas.height);
+  
+  // Draw guidelines grid
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+  ctx.lineWidth = 1;
+  const gridSize = 30;
+  for (let x = 0; x < DOM.canvas.width; x += gridSize) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, DOM.canvas.height); ctx.stroke();
+  }
+  for (let y = 0; y < DOM.canvas.height; y += gridSize) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(DOM.canvas.width, y); ctx.stroke();
+  }
+  
+  // Draw glowing outline silhouette of body based on measurements
+  const { gender, height, chest, waist, hips } = STATE.measurements;
+  
+  const scaleH = height / 165;
+  const bustW = (chest / 100) * 80;
+  const waistW = (waist / 100) * 80;
+  const hipsW = (hips / 100) * 80;
+  
+  const centerX = DOM.canvas.width / 2;
+  const centerY = DOM.canvas.height / 2;
+  
+  ctx.save();
+  ctx.strokeStyle = 'rgba(197, 168, 128, 0.6)';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = 'rgba(197, 168, 128, 0.4)';
+  ctx.shadowBlur = 10;
+  
+  // Head
+  const headRadius = 45 * scaleH;
+  const headY = centerY - 250 * scaleH;
+  ctx.beginPath();
+  ctx.arc(centerX, headY, headRadius, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Torso Path
+  ctx.beginPath();
+  // Neck
+  ctx.moveTo(centerX - 15 * scaleH, headY + headRadius);
+  ctx.lineTo(centerX - 15 * scaleH, headY + headRadius + 20 * scaleH);
+  // Shoulder Left
+  ctx.lineTo(centerX - bustW - 10, headY + headRadius + 35 * scaleH);
+  // Bust Left
+  ctx.lineTo(centerX - bustW, centerY - 80 * scaleH);
+  // Waist Left
+  ctx.lineTo(centerX - waistW, centerY);
+  // Hip Left
+  ctx.lineTo(centerX - hipsW, centerY + 80 * scaleH);
+  // Leg Outer Left
+  ctx.lineTo(centerX - hipsW * 0.7, centerY + 280 * scaleH);
+  // Leg Inner Left
+  ctx.lineTo(centerX - 10, centerY + 280 * scaleH);
+  // Crotch
+  ctx.lineTo(centerX - 5, centerY + 110 * scaleH);
+  ctx.lineTo(centerX + 5, centerY + 110 * scaleH);
+  // Leg Inner Right
+  ctx.lineTo(centerX + 10, centerY + 280 * scaleH);
+  // Leg Outer Right
+  ctx.lineTo(centerX + hipsW * 0.7, centerY + 280 * scaleH);
+  // Hip Right
+  ctx.lineTo(centerX + hipsW, centerY + 80 * scaleH);
+  // Waist Right
+  ctx.lineTo(centerX + waistW, centerY);
+  // Bust Right
+  ctx.lineTo(centerX + bustW, centerY - 80 * scaleH);
+  // Shoulder Right
+  ctx.lineTo(centerX + bustW + 10, headY + headRadius + 35 * scaleH);
+  // Neck right
+  ctx.lineTo(centerX + 15 * scaleH, headY + headRadius + 20 * scaleH);
+  ctx.lineTo(centerX + 15 * scaleH, headY + headRadius);
+  
+  ctx.closePath();
+  ctx.stroke();
+  
+  // Draw subtle glowing fill
+  ctx.fillStyle = 'rgba(197, 168, 128, 0.03)';
+  ctx.fill();
+  
+  // Draw text indicators
+  ctx.fillStyle = '#626675';
+  ctx.font = '10px Inter';
+  ctx.textAlign = 'left';
+  ctx.shadowBlur = 0;
+  
+  ctx.fillText(`Height: ${height}cm`, 20, 50);
+  ctx.fillText(`Chest: ${chest}cm`, 20, 75);
+  ctx.fillText(`Waist: ${waist}cm`, 20, 100);
+  ctx.fillText(`Hips: ${hips}cm`, 20, 125);
+  
+  ctx.restore();
 }
 
 // 14. INTERACTIVE DRAG CALIBRATION LOGIC
@@ -1292,6 +1642,707 @@ function showLoader(show) {
 
 function updateStatusText(text) {
   DOM.fittingStatusText.innerText = text;
+}
+
+// 18. WEBCAM LIVE CAMERA ENGINE
+function listCameraDevices() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+    DOM.cameraSelect.innerHTML = '<option value="">Camera API unsupported</option>';
+    return;
+  }
+  
+  navigator.mediaDevices.enumerateDevices()
+    .then(devices => {
+      const videoDevices = devices.filter(d => d.kind === 'videoinput');
+      DOM.cameraSelect.innerHTML = '';
+      
+      if (videoDevices.length === 0) {
+        DOM.cameraSelect.innerHTML = '<option value="">No cameras detected</option>';
+        return;
+      }
+      
+      videoDevices.forEach((device, index) => {
+        const option = document.createElement('option');
+        option.value = device.deviceId;
+        option.text = device.label || `Camera ${index + 1}`;
+        DOM.cameraSelect.appendChild(option);
+      });
+      
+      if (!STATE.cameraDeviceId && videoDevices.length > 0) {
+        STATE.cameraDeviceId = videoDevices[0].deviceId;
+      }
+    })
+    .catch(err => {
+      console.error("Error enumerating media devices:", err);
+      DOM.cameraSelect.innerHTML = '<option value="">Camera access error</option>';
+    });
+}
+
+function toggleWebcam() {
+  if (STATE.isWebcamActive) {
+    stopWebcam();
+  } else {
+    startWebcam();
+  }
+}
+
+function startWebcam() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Webcam streams are not supported in this browser. Please use photo upload instead.");
+    return;
+  }
+  
+  showLoader(true);
+  updateStatusText("Opening camera feed...");
+  
+  const constraints = {
+    video: STATE.cameraDeviceId ? { deviceId: { exact: STATE.cameraDeviceId } } : true,
+    audio: false
+  };
+  
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then(stream => {
+      STATE.webcamStream = stream;
+      DOM.webcamVideo.srcObject = stream;
+      DOM.webcamVideo.play();
+      
+      DOM.webcamVideo.onloadedmetadata = () => {
+        STATE.isWebcamActive = true;
+        STATE.isWebcamFrozen = false;
+        STATE.frozenFrameData = null;
+        
+        DOM.btnCameraToggle.innerText = "Stop Camera";
+        DOM.btnCameraToggle.className = "camera-action-btn stop";
+        DOM.btnCameraFreeze.classList.remove('hidden');
+        DOM.btnCameraFreeze.innerText = "Freeze Frame";
+        DOM.cameraGuide.classList.remove('hidden');
+        
+        showLoader(false);
+        updateStatusText("Live Camera Try-on active");
+        
+        // Force manual adjustment settings for webcam alignment
+        STATE.fitMode = 'manual';
+        DOM.manualAdjustPanel.classList.remove('collapse');
+        
+        startAnimationLoop();
+      };
+    })
+    .catch(err => {
+      console.error("Webcam access error:", err);
+      showLoader(false);
+      updateStatusText("Failed to access camera.");
+      alert("Could not access your camera. Please ensure permissions are granted and you are running on localhost or HTTPS.");
+    });
+}
+
+function stopWebcam() {
+  stopAnimationLoop();
+  
+  if (STATE.webcamStream) {
+    STATE.webcamStream.getTracks().forEach(track => track.stop());
+    STATE.webcamStream = null;
+  }
+  
+  DOM.webcamVideo.srcObject = null;
+  STATE.isWebcamActive = false;
+  STATE.isWebcamFrozen = false;
+  STATE.frozenFrameData = null;
+  
+  DOM.btnCameraToggle.innerText = "Start Camera";
+  DOM.btnCameraToggle.className = "camera-action-btn start";
+  DOM.btnCameraFreeze.classList.add('hidden');
+  DOM.cameraGuide.classList.add('hidden');
+  
+  updateStatusText("Webcam stopped.");
+  drawWorkspace();
+}
+
+function freezeCameraFrame() {
+  if (!STATE.isWebcamActive || STATE.isWebcamFrozen) return;
+  
+  // Freeze frame by rendering the current video frame to a temporary canvas,
+  // then converting to image data which is drawn on canvas in drawWorkspace.
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = DOM.canvas.width;
+  tempCanvas.height = DOM.canvas.height;
+  const tempCtx = tempCanvas.getContext('2d');
+  
+  // Capture mirrored frame to match live mirrored view
+  tempCtx.translate(tempCanvas.width, 0);
+  tempCtx.scale(-1, 1);
+  tempCtx.drawImage(DOM.webcamVideo, 0, 0, tempCanvas.width, tempCanvas.height);
+  
+  const frozenImg = new Image();
+  frozenImg.onload = () => {
+    STATE.frozenFrameData = frozenImg;
+    STATE.isWebcamFrozen = true;
+    DOM.btnCameraFreeze.innerText = "Resume Camera Feed";
+    updateStatusText("Webcam frame frozen. Adjust garment alignment.");
+  };
+  frozenImg.src = tempCanvas.toDataURL('image/png');
+}
+
+function unfreezeCameraFrame() {
+  STATE.isWebcamFrozen = false;
+  STATE.frozenFrameData = null;
+  DOM.btnCameraFreeze.innerText = "Freeze Frame";
+  updateStatusText("Live Camera Try-on active");
+}
+
+let animationFrameId = null;
+function startAnimationLoop() {
+  if (animationFrameId) return;
+  function loop() {
+    drawWorkspace();
+    animationFrameId = requestAnimationFrame(loop);
+  }
+  animationFrameId = requestAnimationFrame(loop);
+}
+
+function stopAnimationLoop() {
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+}
+
+// 19. TRY-ON MODE CONTROLLER (2D VS 3D)
+function switchTryonMode(mode) {
+  if (STATE.tryonMode === mode) return;
+  
+  STATE.tryonMode = mode;
+  
+  if (mode === '3d') {
+    // Stop webcam if it was active
+    if (STATE.isWebcamActive) {
+      stopWebcam();
+    }
+    
+    // Switch active UI buttons
+    DOM.btnMode2D.classList.remove('active');
+    DOM.btnMode3D.classList.add('active');
+    
+    // Switch canvas visibility
+    DOM.canvas.classList.add('hidden');
+    DOM.fitting3DContainer.classList.remove('hidden');
+    DOM.cameraGuide.classList.add('hidden');
+    
+    // Lock manual sliders out because Three.js uses OrbitControls
+    DOM.manualAdjustPanel.classList.add('collapse');
+    DOM.workspaceTip.innerHTML = "<span>💡 Left click + drag to rotate 3D mannequin, scroll to zoom, right click + drag to pan.</span>";
+    DOM.workspaceTip.classList.remove('fade-out');
+    
+    updateStatusText("Initializing 3D Studio Mannequin...");
+    
+    // Set active tab to measurements for convenience
+    const measTabBtn = document.querySelector('.tab-selectors [data-tab="measurements"]');
+    if (measTabBtn) {
+      measTabBtn.click();
+    }
+    
+    // Launch Three.js Scene
+    setTimeout(() => {
+      init3D();
+      if (STATE.three.scene) {
+        build3DMannequin();
+      }
+      updateStatusText("3D Studio Try-on active.");
+    }, 100);
+    
+  } else {
+    // Switch active UI buttons
+    DOM.btnMode2D.classList.add('active');
+    DOM.btnMode3D.classList.remove('active');
+    
+    // Switch canvas visibility
+    DOM.canvas.classList.remove('hidden');
+    DOM.fitting3DContainer.classList.add('hidden');
+    DOM.workspaceTip.innerHTML = "<span>💡 Drag or resize dress on canvas to adjust the fit.</span>";
+    
+    updateStatusText("2D Try-on active.");
+    
+    // Revert back to models tab
+    const modelsTabBtn = document.querySelector('.tab-selectors [data-tab="models"]');
+    if (modelsTabBtn) {
+      modelsTabBtn.click();
+    }
+    
+    drawWorkspace();
+  }
+}
+
+// 20. CUSTOM MEASUREMENT UI UPDATES
+function syncMeasurementUI() {
+  DOM.sliderMeasureHeight.value = STATE.measurements.height;
+  DOM.sliderMeasureChest.value = STATE.measurements.chest;
+  DOM.sliderMeasureWaist.value = STATE.measurements.waist;
+  DOM.sliderMeasureHips.value = STATE.measurements.hips;
+  
+  DOM.valMeasureHeight.innerText = STATE.measurements.height + "cm";
+  DOM.valMeasureChest.innerText = STATE.measurements.chest + "cm";
+  DOM.valMeasureWaist.innerText = STATE.measurements.waist + "cm";
+  DOM.valMeasureHips.innerText = STATE.measurements.hips + "cm";
+}
+
+// 21. 3D STUDIO RENDER ENGINE (THREE.JS)
+function init3D() {
+  if (STATE.three.renderer) return; // already initialized
+  
+  const container = DOM.fitting3DContainer;
+  const width = container.clientWidth || 600;
+  const height = container.clientHeight || 750;
+  
+  // Scene Setup
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#0a0a0c');
+  
+  // Camera Setup
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+  camera.position.set(0, 1.2, 3.5);
+  
+  // Renderer Setup
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  container.appendChild(renderer.domElement);
+  
+  // Controls Setup (Orbit rotation)
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 1.5;
+  controls.maxDistance = 6.0;
+  controls.maxPolarAngle = Math.PI / 2 + 0.1; // clamp floor boundary
+  controls.target.set(0, 0.9, 0);
+  
+  // Lighting setup
+  const ambientLight = new THREE.AmbientLight('#ffffff', 0.45);
+  scene.add(ambientLight);
+  
+  const dirLight = new THREE.DirectionalLight('#ffffff', 0.8);
+  dirLight.position.set(2, 4, 3);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
+  
+  const rimLight = new THREE.DirectionalLight('#c5a880', 0.55);
+  rimLight.position.set(-2, 2, -3);
+  scene.add(rimLight);
+  
+  // Studio Grid Floor
+  const gridHelper = new THREE.GridHelper(10, 20, '#c5a880', '#1b1b22');
+  gridHelper.position.y = -0.2;
+  scene.add(gridHelper);
+  
+  // Studio Cylinder Stage
+  const stageGeo = new THREE.CylinderGeometry(0.8, 0.85, 0.05, 32);
+  const stageMat = new THREE.MeshStandardMaterial({ color: '#131318', roughness: 0.6, metalness: 0.3 });
+  const stage = new THREE.Mesh(stageGeo, stageMat);
+  stage.position.y = -0.225;
+  scene.add(stage);
+  
+  STATE.three.scene = scene;
+  STATE.three.camera = camera;
+  STATE.three.renderer = renderer;
+  STATE.three.controls = controls;
+  
+  // Render Loop animate
+  function animate3D() {
+    requestAnimationFrame(animate3D);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate3D();
+  
+  // Resize Handler
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+}
+
+function build3DMannequin() {
+  const scene = STATE.three.scene;
+  if (!scene) return;
+  
+  if (STATE.three.mannequin) {
+    scene.remove(STATE.three.mannequin);
+  }
+  
+  const group = new THREE.Group();
+  group.name = "mannequin";
+  
+  // Glowing Glass / Holographic Material for premium luxury feel
+  const material = new THREE.MeshPhysicalMaterial({
+    color: '#c5a880',
+    metalness: 0.1,
+    roughness: 0.15,
+    transmission: 0.65,
+    thickness: 1.0,
+    transparent: true,
+    opacity: 0.6,
+    side: THREE.DoubleSide
+  });
+  
+  const scaleH = STATE.measurements.height / 165;
+  const torsoGroup = new THREE.Group();
+  torsoGroup.position.y = 0.5 * scaleH;
+  
+  // Parametric measurements calculation
+  const chestRad = (STATE.measurements.chest / 2 / Math.PI) / 100 * 1.35;
+  const waistRad = (STATE.measurements.waist / 2 / Math.PI) / 100 * 1.35;
+  const hipsRad = (STATE.measurements.hips / 2 / Math.PI) / 100 * 1.35;
+  
+  // Head
+  const headGeo = new THREE.SphereGeometry(0.11, 32, 32);
+  const headMesh = new THREE.Mesh(headGeo, material);
+  headMesh.position.y = 0.76;
+  torsoGroup.add(headMesh);
+  
+  // Neck
+  const neckGeo = new THREE.CylinderGeometry(0.045, 0.05, 0.1, 16);
+  const neckMesh = new THREE.Mesh(neckGeo, material);
+  neckMesh.position.y = 0.63;
+  torsoGroup.add(neckMesh);
+  
+  // Chest Cylinder
+  const chestGeo = new THREE.CylinderGeometry(chestRad, chestRad, 0.25, 32);
+  const chestMesh = new THREE.Mesh(chestGeo, material);
+  chestMesh.position.y = 0.45;
+  torsoGroup.add(chestMesh);
+  
+  // Waist Cylinder
+  const waistGeo = new THREE.CylinderGeometry(chestRad, waistRad, 0.2, 32);
+  const waistMesh = new THREE.Mesh(waistGeo, material);
+  waistMesh.position.y = 0.23;
+  torsoGroup.add(waistMesh);
+  
+  // Hips Cylinder
+  const hipsGeo = new THREE.CylinderGeometry(waistRad, hipsRad, 0.25, 32);
+  const hipsMesh = new THREE.Mesh(hipsGeo, material);
+  hipsMesh.position.y = 0.01;
+  torsoGroup.add(hipsMesh);
+  
+  // Shoulders joints
+  const shoulderGeo = new THREE.SphereGeometry(0.045, 16, 16);
+  const leftShoulder = new THREE.Mesh(shoulderGeo, material);
+  leftShoulder.position.set(-chestRad - 0.02, 0.45, 0);
+  const rightShoulder = leftShoulder.clone();
+  rightShoulder.position.x = chestRad + 0.02;
+  torsoGroup.add(leftShoulder);
+  torsoGroup.add(rightShoulder);
+  
+  // Arms Cylinders
+  const armGeo = new THREE.CylinderGeometry(0.03, 0.025, 0.52, 16);
+  const leftArm = new THREE.Mesh(armGeo, material);
+  leftArm.position.set(-chestRad - 0.06, 0.21, 0);
+  leftArm.rotation.z = Math.PI / 12;
+  const rightArm = leftArm.clone();
+  rightArm.position.x = chestRad + 0.06;
+  rightArm.rotation.z = -Math.PI / 12;
+  torsoGroup.add(leftArm);
+  torsoGroup.add(rightArm);
+  
+  // Legs Cylinders
+  const legLen = 0.72 * scaleH;
+  const legGeo = new THREE.CylinderGeometry(hipsRad * 0.4, hipsRad * 0.3, legLen, 16);
+  
+  const leftLeg = new THREE.Mesh(legGeo, material);
+  leftLeg.position.set(-hipsRad * 0.45, -legLen / 2 - 0.1, 0);
+  const rightLeg = leftLeg.clone();
+  rightLeg.position.x = hipsRad * 0.45;
+  torsoGroup.add(leftLeg);
+  torsoGroup.add(rightLeg);
+  
+  group.add(torsoGroup);
+  scene.add(group);
+  STATE.three.mannequin = group;
+  
+  // Overlay parametric clothing mesh
+  build3DGarment();
+}
+
+function build3DGarment() {
+  const scene = STATE.three.scene;
+  if (!scene || !STATE.currentProduct || !STATE.three.mannequin) return;
+  
+  const torsoGroup = STATE.three.mannequin.children[0];
+  const oldGarment = torsoGroup.getObjectByName("garment");
+  if (oldGarment) {
+    torsoGroup.remove(oldGarment);
+  }
+  
+  const garmentGroup = new THREE.Group();
+  garmentGroup.name = "garment";
+  
+  const product = STATE.currentProduct;
+  const scaleH = STATE.measurements.height / 165;
+  const chestRad = (STATE.measurements.chest / 2 / Math.PI) / 100 * 1.35;
+  const waistRad = (STATE.measurements.waist / 2 / Math.PI) / 100 * 1.35;
+  const hipsRad = (STATE.measurements.hips / 2 / Math.PI) / 100 * 1.35;
+  
+  // Apply visual offset padding to avoid mesh clipping/z-fighting
+  const gap = 0.016;
+  const gChest = chestRad + gap;
+  const gWaist = waistRad + gap;
+  const gHips = hipsRad + gap;
+  
+  let garmentMaterial;
+  
+  if (product.id === "dress_summer") {
+    // Summer dress: bright floral base
+    garmentMaterial = new THREE.MeshStandardMaterial({
+      color: '#f4cb50',
+      roughness: 0.65,
+      metalness: 0.1,
+      side: THREE.DoubleSide
+    });
+    
+    const upperGeo = new THREE.CylinderGeometry(gChest, gWaist, 0.25, 32, 1, true);
+    const upperMesh = new THREE.Mesh(upperGeo, garmentMaterial);
+    upperMesh.position.y = 0.35;
+    garmentGroup.add(upperMesh);
+    
+    const skirtGeo = new THREE.CylinderGeometry(gWaist, gHips * 1.35, 0.45, 32, 1, true);
+    const skirtMesh = new THREE.Mesh(skirtGeo, garmentMaterial);
+    skirtMesh.position.y = 0.01;
+    garmentGroup.add(skirtMesh);
+    
+    // Dress straps
+    const strapGeo = new THREE.BoxGeometry(0.015, 0.18, 0.008);
+    const leftStrap = new THREE.Mesh(strapGeo, garmentMaterial);
+    leftStrap.position.set(-gChest * 0.6, 0.52, 0);
+    const rightStrap = leftStrap.clone();
+    rightStrap.position.x = gChest * 0.6;
+    garmentGroup.add(leftStrap);
+    garmentGroup.add(rightStrap);
+    
+  } else if (product.id === "dress_gown") {
+    // Red Silk Evening Gown: high shine, floor length
+    garmentMaterial = new THREE.MeshPhysicalMaterial({
+      color: '#b11d24',
+      roughness: 0.15,
+      metalness: 0.05,
+      clearcoat: 0.7,
+      clearcoatRoughness: 0.1,
+      side: THREE.DoubleSide
+    });
+    
+    const upperGeo = new THREE.CylinderGeometry(gChest, gWaist, 0.25, 32, 1, true);
+    const upperMesh = new THREE.Mesh(upperGeo, garmentMaterial);
+    upperMesh.position.y = 0.355;
+    garmentGroup.add(upperMesh);
+    
+    const skirtGeo = new THREE.CylinderGeometry(gWaist, gHips * 1.12, 1.1, 32, 1, true);
+    const skirtMesh = new THREE.Mesh(skirtGeo, garmentMaterial);
+    skirtMesh.position.y = -0.315;
+    garmentGroup.add(skirtMesh);
+    
+    // Asymmetric Shoulder strap
+    const shoulderGeo = new THREE.CylinderGeometry(gChest * 0.95, gChest * 0.95, 0.06, 16, 1, true);
+    const shoulderMesh = new THREE.Mesh(shoulderGeo, garmentMaterial);
+    shoulderMesh.position.set(0, 0.47, 0);
+    shoulderMesh.rotation.z = Math.PI / 11;
+    garmentGroup.add(shoulderMesh);
+    
+  } else if (product.id === "dress_suit") {
+    // Navy command suit: jacket + trousers
+    garmentMaterial = new THREE.MeshStandardMaterial({
+      color: '#1a2238',
+      roughness: 0.75,
+      metalness: 0.1,
+      side: THREE.DoubleSide
+    });
+    
+    const jacketGeo = new THREE.CylinderGeometry(gChest * 1.04, gWaist * 1.04, 0.44, 32, 1, false);
+    const jacketMesh = new THREE.Mesh(jacketGeo, garmentMaterial);
+    jacketMesh.position.y = 0.335;
+    garmentGroup.add(jacketMesh);
+    
+    // Collar elements
+    const lapelGeo = new THREE.BoxGeometry(0.04, 0.2, 0.02);
+    const leftLapel = new THREE.Mesh(lapelGeo, garmentMaterial);
+    leftLapel.position.set(-gChest * 0.4, 0.37, gChest * 0.85);
+    leftLapel.rotation.z = -Math.PI / 8;
+    leftLapel.rotation.y = Math.PI / 6;
+    const rightLapel = leftLapel.clone();
+    rightLapel.position.x = gChest * 0.4;
+    rightLapel.rotation.z = Math.PI / 8;
+    rightLapel.rotation.y = -Math.PI / 6;
+    garmentGroup.add(leftLapel);
+    garmentGroup.add(rightLapel);
+    
+    // Leg trousers
+    const legLen = 0.72 * scaleH;
+    const pantsGeo = new THREE.CylinderGeometry(hipsRad * 0.44, hipsRad * 0.34, legLen + 0.06, 16, 1, false);
+    
+    const leftPant = new THREE.Mesh(pantsGeo, garmentMaterial);
+    leftPant.position.set(-hipsRad * 0.45, -legLen / 2 - 0.1, 0);
+    const rightPant = leftPant.clone();
+    rightPant.position.x = hipsRad * 0.45;
+    
+    garmentGroup.add(leftPant);
+    garmentGroup.add(rightPant);
+    
+  } else if (product.id === "dress_cocktail") {
+    // Velvet Cocktail: bodycon, black, short
+    garmentMaterial = new THREE.MeshPhysicalMaterial({
+      color: '#101012',
+      roughness: 0.8,
+      metalness: 0.05,
+      side: THREE.DoubleSide
+    });
+    
+    const bodyGeo = new THREE.CylinderGeometry(gChest, gWaist, 0.25, 32, 1, true);
+    const bodyMesh = new THREE.Mesh(bodyGeo, garmentMaterial);
+    bodyMesh.position.y = 0.355;
+    garmentGroup.add(bodyMesh);
+    
+    const skirtGeo = new THREE.CylinderGeometry(gWaist, gHips * 1.05, 0.3, 32, 1, true);
+    const skirtMesh = new THREE.Mesh(skirtGeo, garmentMaterial);
+    skirtMesh.position.y = 0.085;
+    garmentGroup.add(skirtMesh);
+    
+  } else if (product.id === "dress_jumpsuit") {
+    // Sage green utility jumpsuit
+    garmentMaterial = new THREE.MeshStandardMaterial({
+      color: '#7e9080',
+      roughness: 0.8,
+      metalness: 0.08,
+      side: THREE.DoubleSide
+    });
+    
+    const torsoMeshGeo = new THREE.CylinderGeometry(gChest * 1.01, gWaist * 1.01, 0.44, 32, 1, false);
+    const torsoMesh = new THREE.Mesh(torsoMeshGeo, garmentMaterial);
+    torsoMesh.position.y = 0.335;
+    garmentGroup.add(torsoMesh);
+    
+    const legLen = 0.72 * scaleH;
+    const pantsGeo = new THREE.CylinderGeometry(hipsRad * 0.46, hipsRad * 0.36, legLen + 0.06, 16, 1, false);
+    
+    const leftPant = new THREE.Mesh(pantsGeo, garmentMaterial);
+    leftPant.position.set(-hipsRad * 0.45, -legLen / 2 - 0.1, 0);
+    const rightPant = leftPant.clone();
+    rightPant.position.x = hipsRad * 0.45;
+    
+    garmentGroup.add(leftPant);
+    garmentGroup.add(rightPant);
+  }
+  
+  torsoGroup.add(garmentGroup);
+}
+
+// 22. SIZE ADVISOR & FIT ESTIMATOR ENGINE
+const GARMENT_SIZES_CHART = {
+  dress_summer: { XS: { chest: 80, waist: 62, hips: 86 }, S: { chest: 84, waist: 66, hips: 90 }, M: { chest: 90, waist: 72, hips: 96 }, L: { chest: 96, waist: 78, hips: 102 }, XL: { chest: 102, waist: 84, hips: 108 }, XXL: { chest: 108, waist: 90, hips: 114 } },
+  dress_gown: { XS: { chest: 78, waist: 60, hips: 84 }, S: { chest: 82, waist: 64, hips: 88 }, M: { chest: 88, waist: 70, hips: 94 }, L: { chest: 94, waist: 76, hips: 100 }, XL: { chest: 100, waist: 82, hips: 106 }, XXL: { chest: 106, waist: 88, hips: 112 } },
+  dress_suit: { XS: { chest: 82, waist: 64, hips: 88 }, S: { chest: 86, waist: 68, hips: 92 }, M: { chest: 92, waist: 74, hips: 98 }, L: { chest: 98, waist: 80, hips: 104 }, XL: { chest: 104, waist: 86, hips: 110 }, XXL: { chest: 110, waist: 92, hips: 116 } },
+  dress_cocktail: { XS: { chest: 78, waist: 60, hips: 84 }, S: { chest: 82, waist: 64, hips: 88 }, M: { chest: 88, waist: 70, hips: 94 }, L: { chest: 94, waist: 76, hips: 100 }, XL: { chest: 100, waist: 82, hips: 106 }, XXL: { chest: 106, waist: 88, hips: 112 } },
+  dress_jumpsuit: { XS: { chest: 82, waist: 64, hips: 88 }, S: { chest: 86, waist: 68, hips: 92 }, M: { chest: 92, waist: 74, hips: 98 }, L: { chest: 98, waist: 80, hips: 104 }, XL: { chest: 104, waist: 86, hips: 110 }, XXL: { chest: 110, waist: 92, hips: 116 } }
+};
+
+function runSizeAdvisor() {
+  const product = STATE.currentProduct;
+  if (!product) {
+    DOM.fitAdvisorPanel.classList.add('collapse');
+    return;
+  }
+  
+  DOM.fitAdvisorPanel.classList.remove('collapse');
+  
+  const chest = STATE.measurements.chest;
+  const waist = STATE.measurements.waist;
+  const hips = STATE.measurements.hips;
+  
+  const chart = GARMENT_SIZES_CHART[product.id];
+  const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  let bestSize = 'M';
+  
+  // Sizing recommendation logic (chooses the smallest size that isn't too tight)
+  for (let i = 0; i < sizes.length; i++) {
+    const sizeSpec = chart[sizes[i]];
+    if (chest <= sizeSpec.chest + 3 && waist <= sizeSpec.waist + 3 && hips <= sizeSpec.hips + 3) {
+      bestSize = sizes[i];
+      break;
+    }
+    if (i === sizes.length - 1) {
+      bestSize = 'XXL';
+    }
+  }
+  
+  const spec = chart[bestSize];
+  const chestDiff = chest - spec.chest;
+  const waistDiff = waist - spec.waist;
+  const hipsDiff = hips - spec.hips;
+  
+  let chestStatus = "perfect", chestText = "Perfect Fit";
+  let waistStatus = "perfect", waistText = "Perfect Fit";
+  let hipsStatus = "perfect", hipsText = "Perfect Fit";
+  
+  let scorePenalties = 0;
+  
+  // Bust fit check
+  if (chestDiff > 2) {
+    chestStatus = "tight";
+    chestText = `Tight (+${chestDiff}cm)`;
+    scorePenalties += Math.min(25, chestDiff * 4);
+  } else if (chestDiff < -4) {
+    chestStatus = "loose";
+    chestText = `Loose (${chestDiff}cm)`;
+    scorePenalties += Math.min(15, Math.abs(chestDiff) * 2);
+  }
+  
+  // Waist fit check
+  if (waistDiff > 2) {
+    waistStatus = "tight";
+    waistText = `Tight (+${waistDiff}cm)`;
+    scorePenalties += Math.min(30, waistDiff * 5);
+  } else if (waistDiff < -4) {
+    waistStatus = "loose";
+    waistText = `Loose (${waistDiff}cm)`;
+    scorePenalties += Math.min(15, Math.abs(waistDiff) * 2);
+  }
+  
+  // Hips fit check
+  if (hipsDiff > 3) {
+    hipsStatus = "tight";
+    hipsText = `Tight (+${hipsDiff}cm)`;
+    scorePenalties += Math.min(25, hipsDiff * 3);
+  } else if (hipsDiff < -5) {
+    hipsStatus = "loose";
+    hipsText = `Loose (${hipsDiff}cm)`;
+    scorePenalties += Math.min(15, Math.abs(hipsDiff) * 1.5);
+  }
+  
+  const fitScore = Math.max(10, Math.round(100 - scorePenalties));
+  
+  DOM.valRecommendedSize.innerText = bestSize;
+  DOM.valFitScore.innerText = `${fitScore}%`;
+  DOM.compatibilityBar.style.width = `${fitScore}%`;
+  
+  DOM.fitAreasGrid.innerHTML = `
+    <div class="fit-area-card">
+      <span class="fit-area-name">CHEST / BUST</span>
+      <span class="fit-area-val">${chest} cm</span>
+      <span class="fit-status ${chestStatus}">${chestText}</span>
+    </div>
+    <div class="fit-area-card">
+      <span class="fit-area-name">WAIST</span>
+      <span class="fit-area-val">${waist} cm</span>
+      <span class="fit-status ${waistStatus}">${waistText}</span>
+    </div>
+    <div class="fit-area-card">
+      <span class="fit-area-name">HIPS</span>
+      <span class="fit-area-val">${hips} cm</span>
+      <span class="fit-status ${hipsStatus}">${hipsText}</span>
+    </div>
+  `;
 }
 
 // Start the App
