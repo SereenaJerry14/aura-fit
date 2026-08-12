@@ -42,21 +42,34 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Network-First Fetch Intercept: Always try network first to get latest updates, fallback to cache offline
+// Network-First & Stale-While-Revalidate Fetch Intercept:
+// Serves static assets from cache instantly, updates the cache in the background, and falls back to network.
 self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET' || !e.request.url.startsWith('http')) {
+    return;
+  }
+  
   e.respondWith(
-    fetch(e.request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && e.request.method === 'GET') {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, responseClone);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(e.request);
-      })
+    caches.match(e.request).then((cachedResponse) => {
+      const networkFetch = fetch(e.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch((err) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          throw err;
+        });
+      
+      // Serve cached copy immediately, otherwise wait for network
+      return cachedResponse || networkFetch;
+    })
   );
 });

@@ -81,5 +81,12 @@
       "form_factor": "narrow",
       "label": "Aura Fashion Mobile Fitting Assistant"
     }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "iarc_rating_id": "e0a4f5db-f8b8-466d-a128-48b4f0b2fdb0",
+  "scope_extensions": [
+    { "origin": "https://cdnjs.cloudflare.com" },
+    { "origin": "https://cdn.jsdelivr.net" }
   ]
 }
