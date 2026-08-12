@@ -1536,11 +1536,26 @@ function renderCart() {
 // 17. PRELOADING IMAGES HELPER
 function preloadImage(src, callback) {
   const img = new Image();
+  
+  // Set crossOrigin to anonymous if it's not a data URL
+  // This allows reading pixels in canvas (CORS) when loading same-origin or CORS-enabled hosting
+  if (!src.startsWith('data:')) {
+    img.crossOrigin = 'anonymous';
+  }
+  
   img.onload = () => callback(img);
   img.onerror = () => {
-    console.error("Failed to load image asset:", src);
-    showLoader(false);
-    updateStatusText("Error loading image asset.");
+    // If the image fails to load with CORS (e.g. server doesn't support CORS headers),
+    // fall back to loading without CORS. The image can still draw, but canvas will be tainted.
+    console.warn("CORS preloading failed. Retrying without CORS:", src);
+    const fallbackImg = new Image();
+    fallbackImg.onload = () => callback(fallbackImg);
+    fallbackImg.onerror = () => {
+      console.error("Failed to load image asset:", src);
+      showLoader(false);
+      updateStatusText("Error loading image asset.");
+    };
+    fallbackImg.src = src;
   };
   img.src = src;
 }
@@ -1565,7 +1580,15 @@ function removeWhiteBackground(img) {
   const offCtx = offCanvas.getContext('2d');
   offCtx.drawImage(img, 0, 0);
   
-  const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
+  let imageData;
+  try {
+    imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
+  } catch (e) {
+    // Graceful fallback if canvas is tainted by cross-origin images or opened directly via file://
+    console.warn("Canvas tainted by cross-origin data. Skipping background removal fallback:", e);
+    return img;
+  }
+  
   const data = imageData.data;
   
   // Determine the background color by sampling corner pixels.
@@ -1696,7 +1719,7 @@ function startWebcam() {
   updateStatusText("Opening camera feed...");
   
   const constraints = {
-    video: STATE.cameraDeviceId ? { deviceId: { exact: STATE.cameraDeviceId } } : true,
+    video: STATE.cameraDeviceId ? { deviceId: STATE.cameraDeviceId } : { facingMode: "user" },
     audio: false
   };
   

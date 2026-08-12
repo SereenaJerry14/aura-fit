@@ -29,6 +29,11 @@
   padding: 0;
 }
 
+html {
+  height: 100%;
+  height: 100dvh;
+}
+
 body {
   background-color: var(--bg-main);
   color: var(--text-primary);
@@ -37,6 +42,7 @@ body {
   line-height: 1.6;
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
 }
 
@@ -1801,4 +1807,17 @@ body {
   background: rgba(234, 179, 8, 0.15);
   color: #eab308;
   border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+/* Hidden webcam layout that keeps Safari decoding frames active */
+#webcam-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0.01;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: -10;
 }
