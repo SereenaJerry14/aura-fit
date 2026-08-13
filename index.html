@@ -24,9 +24,12 @@
       });
     }
   </script>
-  <!-- Three.js and OrbitControls for 3D Virtual Try-On -->
+  <!-- Three.js, OrbitControls, and GLTFLoader for 3D Virtual Try-On -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <!-- MediaPipe Tasks Vision for AR Live 3D Tracking -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm/vision_bundle.js" crossorigin="anonymous"></script>
 </head>
 <body>
   
@@ -44,6 +47,10 @@
         <button id="btn-nav-stylist" class="nav-link">AI OCCASION STYLIST</button>
       </nav>
       <div class="header-actions">
+        <button class="pwa-install-btn hidden" id="btn-install-pwa" title="Install App on Android / Device">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Install App</span>
+        </button>
         <button class="icon-btn" id="btn-toggle-cart">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
           <span class="badge" id="cart-badge">0</span>
@@ -96,6 +103,7 @@
             <div class="fitting-modes">
               <button id="btn-mode-2d" class="mode-tab-btn active">2D Fit</button>
               <button id="btn-mode-3d" class="mode-tab-btn">3D Fit</button>
+              <button id="btn-mode-ar" class="mode-tab-btn ar-highlight">📷 Live AR 3D</button>
             </div>
             
             <div class="fitting-actions">
@@ -116,6 +124,17 @@
             <div class="canvas-container">
               <canvas id="fitting-canvas" width="600" height="750"></canvas>
               <div id="fitting-3d-container" class="hidden"></div>
+              
+              <!-- Real-time AR Camera Tracking Layer -->
+              <div id="ar-camera-container" class="ar-camera-container hidden">
+                <video id="ar-video" autoplay playsinline muted></video>
+                <canvas id="ar-canvas" width="600" height="750"></canvas>
+                <div id="ar-status-badge" class="ar-status-badge">
+                  <span class="ar-dot pulse"></span>
+                  <span id="ar-status-text">AI 3D Landmark Tracking...</span>
+                </div>
+              </div>
+
               <div class="canvas-watermark">AURA FIT™</div>
               
               <!-- Camera alignment overlay guide -->
