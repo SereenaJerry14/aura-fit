@@ -1338,7 +1338,7 @@ body {
    RESPONSIVE DESIGN (TABLETS & PHONES)
    ======================================================= */
    
-/* Mobile / Tablet Views (Single active tab display) */
+/* Mobile / Tablet Views (Single active tab display with smooth touch scrolling) */
 @media screen and (max-width: 1024px) {
   
   .app-panel {
@@ -1349,20 +1349,27 @@ body {
     top: 0;
     left: 0;
     z-index: 10;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 80px;
   }
   
   .app-panel.active {
     display: flex; /* Show only active tab panel */
+    flex-direction: column;
   }
   
   #panel-fitroom {
-    padding: 10px;
+    padding: 10px 10px 80px 10px;
     z-index: 1; /* Keep canvas behind menu popups */
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
   
   .fitting-room-container {
-    max-height: 100%;
+    max-height: none;
     border-radius: var(--radius-md);
+    overflow-y: visible;
   }
   
   .canvas-container {
@@ -1370,7 +1377,7 @@ body {
   }
   
   .product-grid {
-    padding: 16px;
+    padding: 16px 16px 80px 16px;
     gap: 12px;
   }
   
