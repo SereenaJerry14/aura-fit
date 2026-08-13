@@ -475,6 +475,51 @@
         <button class="checkout-btn">Reserve For Fitting Room Tour</button>
       </div>
     </div>
+  <!-- Outfit Product Details Modal -->
+  <div class="modal-overlay hidden" id="product-details-modal">
+    <div class="modal-content product-modal-content">
+      <button class="close-btn modal-close-trigger" id="btn-close-product-modal">&times;</button>
+      <div class="product-modal-grid">
+        <div class="product-modal-image-col">
+          <img src="" id="modal-product-img" alt="Outfit Preview" class="modal-product-image">
+        </div>
+        <div class="product-modal-info-col">
+          <div class="modal-tag-row">
+            <span class="modal-category-badge" id="modal-product-category">DRESS</span>
+            <span class="modal-rating-badge" id="modal-product-rating">★ 4.9</span>
+          </div>
+          <h2 id="modal-product-title" class="modal-title">Crimson Serenade Evening Gown</h2>
+          <div class="modal-price" id="modal-product-price">$349.00</div>
+          <p id="modal-product-desc" class="modal-desc">Description of the selected outfit...</p>
+          
+          <div class="modal-tags-list" id="modal-product-tags">
+            <!-- Dynamic tags -->
+          </div>
+
+          <!-- Size Selector -->
+          <div class="modal-size-section">
+            <span class="size-section-title">Select Size:</span>
+            <div class="size-options-grid">
+              <button type="button" class="size-chip-btn">XS</button>
+              <button type="button" class="size-chip-btn">S</button>
+              <button type="button" class="size-chip-btn active">M</button>
+              <button type="button" class="size-chip-btn">L</button>
+              <button type="button" class="size-chip-btn">XL</button>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="modal-action-buttons">
+            <button type="button" id="btn-modal-tryon" class="modal-primary-btn">
+              <span>✨ TRY ON THIS OUTFIT</span>
+            </button>
+            <button type="button" id="btn-modal-add-cart" class="modal-secondary-btn">
+              🛒 Add to Rack
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Web App JS File -->

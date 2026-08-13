@@ -344,7 +344,20 @@ const DOM = {
   cartBadge: document.getElementById('cart-badge'),
 
   // Mobile Tab Navigation
-  mobileTabBtns: document.querySelectorAll('.mobile-tab-nav .mobile-tab-btn')
+  mobileTabBtns: document.querySelectorAll('.mobile-tab-nav .mobile-tab-btn'),
+
+  // Product Details Modal
+  productModal: document.getElementById('product-details-modal'),
+  btnCloseProductModal: document.getElementById('btn-close-product-modal'),
+  modalProductImg: document.getElementById('modal-product-img'),
+  modalProductCategory: document.getElementById('modal-product-category'),
+  modalProductRating: document.getElementById('modal-product-rating'),
+  modalProductTitle: document.getElementById('modal-product-title'),
+  modalProductPrice: document.getElementById('modal-product-price'),
+  modalProductDesc: document.getElementById('modal-product-desc'),
+  modalProductTags: document.getElementById('modal-product-tags'),
+  btnModalTryOn: document.getElementById('btn-modal-tryon'),
+  btnModalAddCart: document.getElementById('btn-modal-add-cart')
 };
 
 // Canvas context
@@ -621,6 +634,16 @@ function bindEvents() {
   DOM.cartModal.addEventListener('click', (e) => {
     if (e.target === DOM.cartModal) toggleCartModal();
   });
+
+  // Outfit Product Details Modal
+  if (DOM.btnCloseProductModal) {
+    DOM.btnCloseProductModal.addEventListener('click', closeProductDetailsModal);
+  }
+  if (DOM.productModal) {
+    DOM.productModal.addEventListener('click', (e) => {
+      if (e.target === DOM.productModal) closeProductDetailsModal();
+    });
+  }
 }
 
 // 8. RENDER PRODUCTS TO THE CATALOG GRID
@@ -652,9 +675,61 @@ function renderProducts(productsList) {
       </div>
     `;
 
-    card.addEventListener('click', () => tryOnProduct(product));
+    card.addEventListener('click', () => openProductDetailsModal(product));
     DOM.productGrid.appendChild(card);
   });
+}
+
+// OUTFIT PRODUCT DETAILS MODAL PIPELINE
+function openProductDetailsModal(product) {
+  STATE.selectedModalProduct = product;
+
+  if (DOM.modalProductImg) DOM.modalProductImg.src = product.image;
+  if (DOM.modalProductTitle) DOM.modalProductTitle.innerText = product.name;
+  if (DOM.modalProductCategory) DOM.modalProductCategory.innerText = product.category.toUpperCase();
+  if (DOM.modalProductRating) DOM.modalProductRating.innerText = `★ ${product.rating}`;
+  if (DOM.modalProductPrice) DOM.modalProductPrice.innerText = product.priceStr;
+  if (DOM.modalProductDesc) DOM.modalProductDesc.innerText = product.description;
+
+  // Render tags
+  if (DOM.modalProductTags) {
+    DOM.modalProductTags.innerHTML = product.tags.map(t => `<span class="modal-tag-pill">#${t}</span>`).join('');
+  }
+
+  // Size chips binding
+  const sizeBtns = document.querySelectorAll('.size-chip-btn');
+  sizeBtns.forEach(btn => {
+    btn.onclick = (e) => {
+      sizeBtns.forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+    };
+  });
+
+  // Try On Button Handler
+  if (DOM.btnModalTryOn) {
+    DOM.btnModalTryOn.onclick = () => {
+      closeProductDetailsModal();
+      // Switch tab to fitting room
+      switchTab('fitroom');
+      // Load outfit onto mannequin/camera
+      tryOnProduct(product);
+      runSizeAdvisor();
+    };
+  }
+
+  // Add to Rack Button Handler
+  if (DOM.btnModalAddCart) {
+    DOM.btnModalAddCart.onclick = () => {
+      addToCart(product);
+      closeProductDetailsModal();
+    };
+  }
+
+  if (DOM.productModal) DOM.productModal.classList.remove('hidden');
+}
+
+function closeProductDetailsModal() {
+  if (DOM.productModal) DOM.productModal.classList.add('hidden');
 }
 
 // 9. EMULATOR & SPA ACTIONS
